@@ -155,6 +155,7 @@ public final class JsonObject extends Dict implements Json {
         return imp.has(key);
     }
 
+    @Override
     public boolean isEmpty() {
         return imp.isEmpty();
     }
@@ -242,20 +243,12 @@ public final class JsonObject extends Dict implements Json {
     }
 
     public void putTerse(String key, Json value) {
-        JsonObject object = null;
-        if (value != null) {
-            object = value.toJsonTerse();
-        }
-
+        JsonObject object = value == null ? null : value.toJsonTerse();
         put(key, object);
     }
 
     public void putVerbose(String key, Json value) {
-        JsonObject object = null;
-        if (value != null) {
-            object = value.toJsonVerbose();
-        }
-
+        JsonObject object = value == null ? null : value.toJsonVerbose();
         put(key, object);
     }
 

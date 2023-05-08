@@ -16,6 +16,7 @@
  */
 package ch.kinet.sql;
 
+import ch.kinet.DateSpan;
 import java.util.Collection;
 
 public abstract class Condition {
@@ -30,6 +31,20 @@ public abstract class Condition {
 
     public static Condition between(String parameterName, Object lowerBound, Object upperBound) {
         return new Between(parameterName, lowerBound, upperBound);
+    }
+
+    public static Condition during(String parameterName, DateSpan duration) {
+        if (duration.getEndDate() == null) {
+            return greaterOrEqual(parameterName, duration.getStartDate());
+        }
+        else {
+            if (duration.getStartDate() == null) {
+                return smallerOrEqual(parameterName, duration.getEndDate());
+            }
+            else {
+                return between(parameterName, duration.getStartDate(), duration.getEndDate());
+            }
+        }
     }
 
     public static Condition equals(String propertyName, Object value) {

@@ -21,12 +21,15 @@ import ch.kinet.ldap.LdapException;
 import ch.kinet.ldap.LdapObject;
 import ch.kinet.ldap.Name;
 import ch.kinet.ldap.SearchResult;
+import java.util.Collection;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 public final class AdGroup extends LdapObject {
 
     private static final String ADMIN_DESCRIPTION = "adminDescription";
+    private static final String AUTH_ORIG = "authOrig";
     private static final String DESCRIPTION = "description";
     private static final String GROUP = "group";
     private static final String GROUP_TYPE = "groupType";
@@ -38,7 +41,7 @@ public final class AdGroup extends LdapObject {
     private static final int ACCOUNT_GROUP = 0x2;
     private static final int SECURITY_GROUP = 0x80000000;
     public static final String[] ATTRIBUTES = {
-        ADMIN_DESCRIPTION, DESCRIPTION, MAIL, MEMBER, MS_EXCH_REQUIRE_AUTH_TO_SEND_TO, SAM_ACCOUNT_NAME
+        ADMIN_DESCRIPTION, AUTH_ORIG, DESCRIPTION, MAIL, MEMBER, MS_EXCH_REQUIRE_AUTH_TO_SEND_TO, SAM_ACCOUNT_NAME
     };
     private final SortedSet<String> members;
 
@@ -66,6 +69,10 @@ public final class AdGroup extends LdapObject {
 
     public boolean contains(AdUser user) {
         return members.contains(user.dn().toString());
+    }
+
+    public Stream<String> getAuthOrig() throws LdapException {
+        return getAsStrings(AUTH_ORIG);
     }
 
     public String getDescription() throws LdapException {
@@ -100,6 +107,10 @@ public final class AdGroup extends LdapObject {
         if (members.remove(user.dn().toString())) {
             setAsStrings(MEMBER, members);
         }
+    }
+
+    public void setAuthOrig(Collection<String> authOrig) {
+        setAsStrings(AUTH_ORIG, authOrig);
     }
 
     public void setId(int id) {

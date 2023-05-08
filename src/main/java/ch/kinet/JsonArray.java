@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 by Stefan Rothe
+ * Copyright (C) 2016 - 2023 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -92,20 +92,12 @@ public final class JsonArray {
     }
 
     public void addTerse(Json value) {
-        JsonObject object = null;
-        if (value != null) {
-            object = value.toJsonTerse();
-        }
-
+        JsonObject object = value == null ? null : value.toJsonTerse();
         add(object);
     }
 
     public void addVerbose(Json value) {
-        JsonObject object = null;
-        if (value != null) {
-            object = value.toJsonVerbose();
-        }
-
+        JsonObject object = value == null ? null : value.toJsonVerbose();
         add(object);
     }
 

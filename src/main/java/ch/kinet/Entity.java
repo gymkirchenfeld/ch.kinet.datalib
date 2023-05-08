@@ -57,14 +57,6 @@ public class Entity implements Comparable<Entity>, Json {
         return id;
     }
 
-    protected int doCompare(Entity other) {
-        if (other == null) {
-            return 1;
-        }
-
-        return id - other.id;
-    }
-
     @Deprecated
     public JsonObject toJson() {
         return JsonObject.create();
@@ -78,5 +70,13 @@ public class Entity implements Comparable<Entity>, Json {
     @Override
     public JsonObject toJsonVerbose() {
         return toJsonTerse();
+    }
+
+    protected int doCompare(Entity other) {
+        if (other == null) {
+            return 1;
+        }
+
+        return id - other.id;
     }
 }
