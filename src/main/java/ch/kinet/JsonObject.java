@@ -209,6 +209,17 @@ public final class JsonObject extends Dict implements Json {
         }
     }
 
+    public void put(Timestamp value) {
+        if (value == null) {
+            putNull("date");
+            putNull("time");
+        }
+        else {
+            put("date", value.getDate());
+            put("time", value.getTime());
+        }
+    }
+
     public void put(String keyPrefix, Timestamp value) {
         if (value == null) {
             putNull(keyPrefix + "Date");
