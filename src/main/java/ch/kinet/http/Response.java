@@ -42,7 +42,7 @@ public class Response {
         return new Response(Status.CREATED);
     }
 
-    public static Response createdJson(Json object) {
+    public static Response createdJsonVerbose(Json object) {
         if (object == null) {
             return internalServerError();
         }
@@ -68,19 +68,29 @@ public class Response {
         return new Response(Status.INTERNAL_SERVER_ERROR);
     }
 
-    public static Response json(Json result) {
+    public static Response jsonTerse(Json result) {
         if (result == null) {
             return notFound();
         }
 
         JsonObject root = JsonObject.create();
-        root.putVerbose("result", result);
+        root.putTerse("result", result);
         return new Response(Status.OK, Data.json(root));
     }
 
     public static Response jsonTerse(Stream<? extends Json> stream) {
         JsonObject root = JsonObject.create();
         root.put("result", JsonArray.createTerse(stream));
+        return new Response(Status.OK, Data.json(root));
+    }
+
+    public static Response jsonVerbose(Json result) {
+        if (result == null) {
+            return notFound();
+        }
+
+        JsonObject root = JsonObject.create();
+        root.putVerbose("result", result);
         return new Response(Status.OK, Data.json(root));
     }
 
