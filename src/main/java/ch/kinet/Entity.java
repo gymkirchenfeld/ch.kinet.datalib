@@ -57,14 +57,11 @@ public class Entity implements Comparable<Entity>, Json {
         return id;
     }
 
-    @Deprecated
-    public JsonObject toJson() {
-        return JsonObject.create();
-    }
-
     @Override
     public JsonObject toJsonTerse() {
-        return toJson();
+        JsonObject result = JsonObject.create();
+        result.put(JSON_ID, id);
+        return result;
     }
 
     @Override
