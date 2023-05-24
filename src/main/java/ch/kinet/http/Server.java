@@ -36,6 +36,7 @@ public final class Server implements HttpHandler {
     private static final String METHOD_DELETE = "DELETE";
     private static final String METHOD_GET = "GET";
     private static final String METHOD_OPTIONS = "OPTIONS";
+    private static final String METHOD_PATCH = "PATCH";
     private static final String METHOD_POST = "POST";
     private static final String METHOD_PUT = "PUT";
     private static final Map<String, String> defaultHeaders = createDefaultHeaders();
@@ -52,7 +53,7 @@ public final class Server implements HttpHandler {
     private static Map<String, String> createDefaultHeaders() {
         Map<String, String> result = new HashMap<>();
         result.put("Access-Control-Allow-Headers", "Authorization");
-        result.put("Access-Control-Allow-Methods", "DELETE,GET,POST,PUT");
+        result.put("Access-Control-Allow-Methods", "DELETE,GET,PATCH,POST,PUT");
         result.put("Access-Control-Allow-Origin", "*");
         result.put("Access-Control-Max-Age", "0");
         result.put("Content-Security-Policy", "base-uri 'none'; connect-src 'none'; default-src 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'none'");
@@ -79,14 +80,17 @@ public final class Server implements HttpHandler {
                 case METHOD_DELETE:
                     response = handleDelete(exchange);
                     break;
-                case METHOD_POST:
-                    response = handlePost(exchange);
-                    break;
                 case METHOD_GET:
                     response = handleGet(exchange);
                     break;
                 case METHOD_OPTIONS:
                     response = Response.ok();
+                    break;
+                case METHOD_PATCH:
+                    response = handlePatch(exchange);
+                    break;
+                case METHOD_POST:
+                    response = handlePost(exchange);
                     break;
                 case METHOD_PUT:
                     response = handlePut(exchange);
@@ -113,6 +117,16 @@ public final class Server implements HttpHandler {
 
     private Response handleGet(HttpServerExchange exchange) {
         Request r = Request.createGet(parseAuthorisation(exchange), exchange.getRequestPath(), parseQuery(exchange));
+        return requestHandler.handleRequest(r);
+    }
+
+    private Response handlePatch(HttpServerExchange exchange) {
+        JsonObject body = parseBody(exchange);
+        if (body == null) {
+            return Response.badRequest("Invalid body.");
+        }
+
+        Request r = Request.createPatch(parseAuthorisation(exchange), exchange.getRequestPath(), body);
         return requestHandler.handleRequest(r);
     }
 

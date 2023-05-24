@@ -21,7 +21,7 @@ import ch.kinet.JsonObject;
 public final class Request {
 
     public enum Method {
-        Delete, Get, Post, Put
+        Delete, Get, Patch, Post, Put
     };
 
     private final String authorisation;
@@ -36,6 +36,10 @@ public final class Request {
 
     public static Request createGet(String authorisation, String path, Query query) {
         return new Request(Request.Method.Get, authorisation, path, query, null);
+    }
+
+    public static Request createPatch(String authorisation, String path, JsonObject body) {
+        return new Request(Request.Method.Patch, authorisation, path, null, body);
     }
 
     public static Request createPost(String authorisation, String path, JsonObject body) {
