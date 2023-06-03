@@ -200,21 +200,12 @@ public class Connection {
         return SelectStatement.execute(this, schemaName, targetClass, where).stream();
     }
 
-    public final <T> Stream<T> selectStream(String schemaName, Class<T> targetClass, Condition where) {
-        return select(schemaName, targetClass, where);
-    }
-
     public final <T> Stream<T> selectAll(String schemaName, Class<T> targetClass) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
 
         return select(schemaName, targetClass, null);
-    }
-
-    @Deprecated
-    public final <T> Stream<T> selectAllStream(String schemaName, Class<T> targetClass) {
-        return selectAll(schemaName, targetClass);
     }
 
     public final <T> T selectOne(String schemaName, Class<T> targetClass, Condition where) {
