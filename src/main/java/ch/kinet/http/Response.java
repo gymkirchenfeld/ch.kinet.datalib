@@ -68,6 +68,16 @@ public class Response {
         return new Response(Status.INTERNAL_SERVER_ERROR);
     }
 
+    public static Response json(JsonObject result) {
+        if (result == null) {
+            return notFound();
+        }
+
+        JsonObject root = JsonObject.create();
+        root.put("result", result);
+        return new Response(Status.OK, Data.json(root));
+    }
+
     public static Response jsonTerse(Json result) {
         if (result == null) {
             return notFound();
