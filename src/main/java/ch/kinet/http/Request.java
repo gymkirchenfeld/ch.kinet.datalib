@@ -16,7 +16,7 @@
  */
 package ch.kinet.http;
 
-import ch.kinet.JsonObject;
+import ch.kinet.Data;
 
 public final class Request {
 
@@ -25,7 +25,7 @@ public final class Request {
     };
 
     private final String authorisation;
-    private final JsonObject body;
+    private final Data body;
     private final Method method;
     private final String path;
     private final Query query;
@@ -38,19 +38,11 @@ public final class Request {
         return new Request(Request.Method.Get, authorisation, path, query, null);
     }
 
-    public static Request createPatch(String authorisation, String path, JsonObject body) {
-        return new Request(Request.Method.Patch, authorisation, path, null, body);
+    public static Request withBody(Method method, String authorisation, String path, Data body) {
+        return new Request(method, authorisation, path, null, body);
     }
 
-    public static Request createPost(String authorisation, String path, JsonObject body) {
-        return new Request(Request.Method.Post, authorisation, path, null, body);
-    }
-
-    public static Request createPut(String authorisation, String path, JsonObject body) {
-        return new Request(Request.Method.Put, authorisation, path, null, body);
-    }
-
-    protected Request(Method method, String authorisation, String path, Query query, JsonObject body) {
+    protected Request(Method method, String authorisation, String path, Query query, Data body) {
         this.authorisation = authorisation;
         this.body = body;
         this.method = method;
@@ -62,7 +54,7 @@ public final class Request {
         return authorisation;
     }
 
-    public final JsonObject getBody() {
+    public final Data getBody() {
         return body;
     }
 

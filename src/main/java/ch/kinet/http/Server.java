@@ -16,7 +16,7 @@
  */
 package ch.kinet.http;
 
-import ch.kinet.Binary;
+import ch.kinet.Data;
 import ch.kinet.JsonObject;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class Server implements HttpHandler {
 
@@ -40,6 +42,7 @@ public final class Server implements HttpHandler {
     private static final String METHOD_POST = "POST";
     private static final String METHOD_PUT = "PUT";
     private static final Map<String, String> defaultHeaders = createDefaultHeaders();
+    private static final Set<String> acceptedContentTypes = createAcceptedContentTypes();
     private final RequestHandler requestHandler;
 
     public static void start(int port, RequestHandler requestHandler) {
@@ -50,11 +53,18 @@ public final class Server implements HttpHandler {
         server.start();
     }
 
+    private static Set<String> createAcceptedContentTypes() {
+        Set<String> result = new HashSet<>();
+        result.add(Data.MIME_TYPE_JSON);
+        return result;
+    }
+
     private static Map<String, String> createDefaultHeaders() {
         Map<String, String> result = new HashMap<>();
-        result.put("Access-Control-Allow-Headers", "Authorization");
+        result.put("Access-Control-Allow-Headers", "Authorization,Content-Type");
         result.put("Access-Control-Allow-Methods", "DELETE,GET,PATCH,POST,PUT");
         result.put("Access-Control-Allow-Origin", "*");
+        result.put("Access-Control-Expose-Headers", "Content-Disposition");
         result.put("Access-Control-Max-Age", "0");
         result.put("Content-Security-Policy", "base-uri 'none'; connect-src 'none'; default-src 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'none'");
         result.put("Strict-Transport-Security", "max-age=15552000; includeSubDomains; preload");
@@ -87,13 +97,13 @@ public final class Server implements HttpHandler {
                     response = Response.ok();
                     break;
                 case METHOD_PATCH:
-                    response = handlePatch(exchange);
+                    response = handleRequestWithBody(exchange, Request.Method.Patch);
                     break;
                 case METHOD_POST:
-                    response = handlePost(exchange);
+                    response = handleRequestWithBody(exchange, Request.Method.Post);
                     break;
                 case METHOD_PUT:
-                    response = handlePut(exchange);
+                    response = handleRequestWithBody(exchange, Request.Method.Put);
                     break;
                 default:
                     response = Response.methodNotAllowed();
@@ -120,33 +130,23 @@ public final class Server implements HttpHandler {
         return requestHandler.handleRequest(r);
     }
 
-    private Response handlePatch(HttpServerExchange exchange) {
-        JsonObject body = parseBody(exchange);
-        if (body == null) {
-            return Response.badRequest("Invalid body.");
+    private Response handleRequestWithBody(HttpServerExchange exchange, Request.Method method) {
+        String contentType = exchange.getRequestHeaders().getFirst(Headers.CONTENT_TYPE);
+        int pos = contentType.indexOf(';');
+        if (pos >= 0) {
+            contentType = contentType.substring(0, pos);
         }
 
-        Request r = Request.createPatch(parseAuthorisation(exchange), exchange.getRequestPath(), body);
-        return requestHandler.handleRequest(r);
-    }
-
-    private Response handlePost(HttpServerExchange exchange) {
-        JsonObject body = parseBody(exchange);
-        if (body == null) {
-            return Response.badRequest("Invalid body.");
+        if (!acceptedContentTypes.contains(contentType)) {
+            return Response.unsupportedMediaType();
         }
 
-        Request r = Request.createPost(parseAuthorisation(exchange), exchange.getRequestPath(), body);
-        return requestHandler.handleRequest(r);
-    }
-
-    private Response handlePut(HttpServerExchange exchange) {
-        JsonObject body = parseBody(exchange);
+        Data body = parseBody(exchange, contentType);
         if (body == null) {
-            return Response.badRequest("Invalid body.");
+            return Response.internalServerError();
         }
 
-        Request r = Request.createPut(parseAuthorisation(exchange), exchange.getRequestPath(), body);
+        Request r = Request.withBody(method, parseAuthorisation(exchange), exchange.getRequestPath(), body);
         return requestHandler.handleRequest(r);
     }
 
@@ -154,23 +154,47 @@ public final class Server implements HttpHandler {
         return exchange.getRequestHeaders().getFirst(Headers.AUTHORIZATION);
     }
 
-    private JsonObject parseBody(HttpServerExchange exchange) {
+    private Data parseBody(HttpServerExchange exchange, String contentType) {
+        try {
+            switch (contentType) {
+                case Data.MIME_TYPE_JSON:
+                    return parseJsonBody(exchange);
+                case Data.MIME_TYPE_TEXT:
+                    return parseTextBody(exchange);
+                default:
+                    return parseBinaryBody(exchange, contentType);
+            }
+        }
+        catch (IOException | RuntimeException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    private Data parseBinaryBody(HttpServerExchange exchange, String contentType) throws IOException {
+        return Data.binary(exchange.getInputStream(), null, contentType);
+    }
+
+    private Data parseJsonBody(HttpServerExchange exchange) throws IOException {
         StringBuilder builder = new StringBuilder();
         BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getInputStream()));
         String line;
-        try {
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-            }
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+        }
 
-            return JsonObject.create(builder.toString());
+        return Data.json(JsonObject.create(builder.toString()));
+    }
+
+    private Data parseTextBody(HttpServerExchange exchange) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getInputStream()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
         }
-        catch (org.json.JSONException ex) {
-            return null;
-        }
-        catch (IOException ex) {
-            return null;
-        }
+
+        return Data.text(builder.toString());
     }
 
     private Query parseQuery(HttpServerExchange exchange) {
@@ -190,12 +214,14 @@ public final class Server implements HttpHandler {
 
         Data body = response.getBody();
         exchange.setStatusCode(response.getStatus());
-        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, body.getMimeType());
-
+        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, body.mimeType());
+        String fileName = body.fileName();
+        if (fileName != null) {
+            exchange.getResponseHeaders().put(Headers.CONTENT_DISPOSITION, createContentDispositionHeader(fileName));
+        }
         try {
-            Binary bytes = body.getData();
-            if (bytes != null && !bytes.isNull()) {
-                exchange.getOutputStream().write(bytes.toBytes());
+            if (!body.isEmpty()) {
+                exchange.getOutputStream().write(body.toBytes());
             }
         }
         catch (IOException ex) {
@@ -206,5 +232,12 @@ public final class Server implements HttpHandler {
 
         // required!
         exchange.endExchange();
+    }
+
+    private String createContentDispositionHeader(String fileName) {
+        StringBuilder result = new StringBuilder("attachment; filename=\"");
+        result.append(fileName);
+        result.append("\"");
+        return result.toString();
     }
 }

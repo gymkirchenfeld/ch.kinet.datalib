@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 - 2022 by Tom Jampen, Stefan Rothe
+ * Copyright (C) 2013 - 2023 by Tom Jampen, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,6 @@
  */
 package ch.kinet;
 
-import ch.kinet.http.Data;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,7 +82,7 @@ public final class Mailer {
             for (Data attachment : mail.attachments) {
                 MimeBodyPart part = new MimeBodyPart();
                 part.setDataHandler(new DataHandler(new Adapter(attachment)));
-                part.setFileName(attachment.getFileName());
+                part.setFileName(attachment.fileName());
                 multipart.addBodyPart(part);
             }
 
@@ -103,7 +102,7 @@ public final class Mailer {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            return new ByteArrayInputStream(data.getData().toBytes());
+            return new ByteArrayInputStream(data.toBytes());
         }
 
         @Override
@@ -113,12 +112,12 @@ public final class Mailer {
 
         @Override
         public String getContentType() {
-            return data.getMimeType();
+            return data.mimeType();
         }
 
         @Override
         public String getName() {
-            return data.getFileName();
+            return data.fileName();
         }
     }
 }

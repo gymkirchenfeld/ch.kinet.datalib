@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 - 2022 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2014 - 2023 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,6 @@
  */
 package ch.kinet;
 
-import ch.kinet.http.Data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

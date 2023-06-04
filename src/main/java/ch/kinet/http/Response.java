@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 - 2022 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2021 - 2023 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,6 +16,7 @@
  */
 package ch.kinet.http;
 
+import ch.kinet.Data;
 import ch.kinet.ICalendar;
 import ch.kinet.Json;
 import ch.kinet.JsonArray;
@@ -78,6 +79,12 @@ public class Response {
         return new Response(Status.OK, Data.json(root));
     }
 
+    public static Response jsonArray(JsonArray array) {
+        JsonObject root = JsonObject.create();
+        root.put("result", array);
+        return new Response(Status.OK, Data.json(root));
+    }
+
     public static Response jsonTerse(Json result) {
         if (result == null) {
             return notFound();
@@ -128,6 +135,10 @@ public class Response {
 
     public static Response unauthorized() {
         return new Response(Status.UNAUTHORIZED);
+    }
+
+    public static Response unsupportedMediaType() {
+        return new Response(Status.UNSUPPORTED_MEDIA_TYPE);
     }
 
     private Response(int status) {

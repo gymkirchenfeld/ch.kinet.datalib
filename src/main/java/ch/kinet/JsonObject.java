@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 - 2021 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2016 - 2023 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,6 @@
  */
 package ch.kinet;
 
-import ch.kinet.http.Data;
 import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -83,7 +82,7 @@ public final class JsonObject extends Dict implements Json {
             return Data.empty();
         }
 
-        return Data.fromJson(object);
+        return Data.jsonEncodedBinary(object);
     }
 
     @Override
