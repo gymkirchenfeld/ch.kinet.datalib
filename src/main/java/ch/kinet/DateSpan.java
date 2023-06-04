@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 - 2021 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2020 - 2023 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -22,7 +22,7 @@ public interface DateSpan {
         return dateSpan.getEndDate() == null || dateSpan.getStartDate() == null;
     }
 
-    boolean contains(Date day);
+    boolean contains(Date date);
 
     Date getEndDate();
 

@@ -60,6 +60,14 @@ public final class Entities<T extends Entity> implements Iterable<T> {
         list.forEach(action);
     }
 
+    public T get(int index) {
+        return list.get(index);
+    }
+
+    public int indexOf(T item) {
+        return list.indexOf(item);
+    }
+
     public boolean isEmpty() {
         return list.isEmpty();
     }
@@ -79,8 +87,16 @@ public final class Entities<T extends Entity> implements Iterable<T> {
         byId.remove(item.getId());
     }
 
+    public int size() {
+        return list.size();
+    }
+
     public Stream<T> stream() {
         return list.stream();
+    }
+
+    public List<T> subList(int fromIndex, int toIndex) {
+        return list.subList(fromIndex, toIndex);
     }
 
     private void doAdd(T item) {

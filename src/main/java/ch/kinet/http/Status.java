@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 - 2021 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2018 - 2023 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by

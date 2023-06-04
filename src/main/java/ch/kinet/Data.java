@@ -17,10 +17,14 @@
 package ch.kinet;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class Data implements Json {
 
@@ -28,12 +32,59 @@ public abstract class Data implements Json {
     private static final String JSON_FILE_NAME = "fileName";
     private static final String JSON_MIME_TYPE = "mimeType";
     public static final String MIME_TYPE_CSV = "text/csv";
-    public static final String MIME_TYPE_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    private static final String MIME_TYPE_DOC = "application/msword";
+    private static final String MIME_TYPE_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     public static final String MIME_TYPE_ICAL = "text/calendar";
+    public static final String MIME_TYPE_JPEG = "image/jpeg";
     public static final String MIME_TYPE_JSON = "application/json";
+    private static final String MIME_TYPE_ODT = "application/vnd.oasis.opendocument.text";
     public static final String MIME_TYPE_TEXT = "text/plain";
     public static final String MIME_TYPE_PDF = "application/pdf";
     public static final String MIME_TYPE_PNG = "image/png";
+    private static final String MIME_TYPE_PPT = "application/vnd.ms-powerpoint";
+    private static final String MIME_TYPE_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    private static final String MIME_TYPE_XLS = "application/vnd.ms-excel";
+    private static final String MIME_TYPE_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String MIME_TYPE_XML = "application/xhtml+xml";
+    private static final String MIME_TYPE_XPS = "application/oxps, application/vnd.ms-xpsdocument";
+    private static final String MIME_TYPE_ZIP = "application/zip";
+    public static final String MIME_TYPE_DEFAULT = "application/x-binary";
+
+    private static final Map<String, String> MIME_MAP = createMimeMap();
+
+    private static Map<String, String> createMimeMap() {
+        Map<String, String> result = new HashMap<>();
+        result.put("csv", MIME_TYPE_CSV);
+        result.put("doc", MIME_TYPE_DOC);
+        result.put("docx", MIME_TYPE_DOCX);
+        result.put("dot", MIME_TYPE_DOC);
+        result.put("dotx", MIME_TYPE_DOCX);
+        result.put("jpg", MIME_TYPE_JPEG);
+        result.put("jpeg", MIME_TYPE_JPEG);
+        result.put("odt", MIME_TYPE_ODT);
+        result.put("pdf", MIME_TYPE_PDF);
+        result.put("ppt", MIME_TYPE_PPT);
+        result.put("pptx", MIME_TYPE_PPTX);
+        result.put("png", MIME_TYPE_PNG);
+        result.put("txt", MIME_TYPE_TEXT);
+        result.put("xls", MIME_TYPE_XLS);
+        result.put("xlsx", MIME_TYPE_XLSX);
+        result.put("xml", MIME_TYPE_XML);
+        result.put("xps", MIME_TYPE_XPS);
+        result.put("zip", MIME_TYPE_ZIP);
+        return result;
+    }
+
+    public static Data file(byte[] content, String fileName) throws IOException {
+        return new BinaryData(content, fileName, guessMimeType(fileName));
+
+    }
+
+    public static Data file(File file, String fileName) throws IOException {
+        try (FileInputStream in = new FileInputStream(file)) {
+            return binary(in, fileName, guessMimeType(fileName));
+        }
+    }
 
     public static Data binary(InputStream in, String fileName, String mimeType) throws IOException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -77,6 +128,10 @@ public abstract class Data implements Json {
         catch (IllegalArgumentException ex) {
             return empty();
         }
+    }
+
+    public static Data jpeg(Binary content, String fileName) {
+        return new BinaryData(content.toBytes(), fileName, MIME_TYPE_JPEG);
     }
 
     public static Data pdf(byte[] content, String fileName) {
@@ -244,6 +299,24 @@ public abstract class Data implements Json {
         public String toString() {
             return content;
         }
+    }
+
+    private static String guessMimeType(String fileName) {
+        if (fileName == null) {
+            return MIME_TYPE_DEFAULT;
+        }
+
+        int pos = fileName.lastIndexOf('.');
+        if (pos < 0) {
+            return MIME_TYPE_DEFAULT;
+        }
+
+        String ext = fileName.substring(pos + 1).toLowerCase();
+        if (MIME_MAP.containsKey(ext)) {
+            return MIME_MAP.get(ext);
+        }
+
+        return MIME_TYPE_DEFAULT;
     }
 
     private static String encodeBase64(byte[] content) {

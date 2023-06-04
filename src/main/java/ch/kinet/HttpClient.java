@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2016 Stefan Rothe
+ * Copyright (c) 2016 - 2022 Stefan Rothe
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,27 +39,40 @@ import javax.net.ssl.TrustManagerFactory;
 public final class HttpClient {
 
     private SSLContext sslContext;
+    private final String keyStoreType;
 
     public static HttpClient create() {
         return new HttpClient();
     }
 
-    public static HttpClient create(String keyStorePath, char[] keyStorePassword, char[] keyPassword,
-                                    String trustStorePath, char[] trustStorePassword) {
-        return new HttpClient(keyStorePath, keyStorePassword, keyPassword, trustStorePath, trustStorePassword);
+    public static HttpClient createPKIX(String keyStorePath, char[] keyStorePassword, char[] keyPassword,
+                                        String trustStorePath, char[] trustStorePassword) {
+        return new HttpClient("PKIX", "PKCS12", keyStorePath, keyStorePassword, keyPassword,
+                              trustStorePath, trustStorePassword);
+    }
+
+    public static HttpClient createJKS(String keyStorePath, char[] keyStorePassword, char[] keyPassword,
+                                       String trustStorePath, char[] trustStorePassword) {
+        return new HttpClient(null, null, keyStorePath, keyStorePassword, keyPassword, trustStorePath, trustStorePassword);
     }
 
     private HttpClient() {
+        keyStoreType = KeyStore.getDefaultType();
         sslContext = null;
     }
 
-    private HttpClient(String keyStorePath, char[] keyStorePassword, char[] keyPassword,
-                       String trustStorePath, char[] trustStorePassword) {
+    private HttpClient(String managerFactoryType, String keyStoreType, String keyStorePath, char[] keyStorePassword,
+                       char[] keyPassword, String trustStorePath, char[] trustStorePassword) {
+        if (Util.isEmpty(managerFactoryType)) {
+            managerFactoryType = KeyManagerFactory.getDefaultAlgorithm();
+        }
+
+        this.keyStoreType = Util.isEmpty(keyStoreType) ? KeyStore.getDefaultType() : keyStoreType;
         try {
             // init key manager
             KeyManager[] kms = null;
             if (keyStorePath != null) {
-                final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                KeyManagerFactory kmf = KeyManagerFactory.getInstance(managerFactoryType);
                 kmf.init(loadKeyStore(keyStorePath, keyStorePassword), keyPassword);
                 kms = kmf.getKeyManagers();
             }
@@ -67,7 +80,7 @@ public final class HttpClient {
             // init trust manager
             TrustManager[] tms = null;
             if (trustStorePath != null) {
-                final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(managerFactoryType);
                 tmf.init(loadKeyStore(trustStorePath, trustStorePassword));
                 tms = tmf.getTrustManagers();
             }
@@ -90,13 +103,13 @@ public final class HttpClient {
 
     private HttpConnection openConnection(String url, String method) {
         try {
-            final URLConnection connection = new URL(url).openConnection();
+            URLConnection connection = new URL(url).openConnection();
             if (connection instanceof HttpsURLConnection && sslContext != null) {
                 ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
             }
 
             if (connection instanceof HttpURLConnection) {
-                final HttpURLConnection conn = (HttpURLConnection) connection;
+                HttpURLConnection conn = (HttpURLConnection) connection;
                 conn.setRequestMethod(method);
                 return new HttpConnection(conn);
             }
@@ -108,8 +121,8 @@ public final class HttpClient {
         return null;
     }
 
-    private static KeyStore loadKeyStore(String path, char[] password) throws Exception {
-        final KeyStore result = KeyStore.getInstance(KeyStore.getDefaultType());
+    private KeyStore loadKeyStore(String path, char[] password) throws Exception {
+        KeyStore result = KeyStore.getInstance(keyStoreType);
         FileInputStream fi = null;
         try {
             fi = new FileInputStream(path);
