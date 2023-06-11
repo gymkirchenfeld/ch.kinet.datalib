@@ -28,9 +28,21 @@ public final class JsonArray {
         return new JsonArray(new JSONArray());
     }
 
+    public static JsonArray create(Stream<JsonObject> elements) {
+        final JsonArray result = new JsonArray(new JSONArray());
+        elements.forEachOrdered(element -> result.add(element));
+        return result;
+    }
+
     public static JsonArray createTerse(Stream<? extends Json> elements) {
         final JsonArray result = new JsonArray(new JSONArray());
         elements.forEachOrdered(element -> result.addTerse(element));
+        return result;
+    }
+
+    public static JsonArray createTerse(Iterable<? extends Json> elements) {
+        final JsonArray result = new JsonArray(new JSONArray());
+        elements.forEach(element -> result.addTerse(element));
         return result;
     }
 
@@ -40,25 +52,14 @@ public final class JsonArray {
         return result;
     }
 
-//    public static JsonArray create(Iterable<? extends Json> elements) {
-//        final JsonArray result = new JsonArray(new JSONArray(), verbosity);
-//        result.addAll(elements);
-//        return result;
-//    }
-    public static JsonArray create(String source) {
-        return new JsonArray(new JSONArray(source));
+    public static JsonArray createVerbose(Iterable<? extends Json> elements) {
+        final JsonArray result = new JsonArray(new JSONArray());
+        elements.forEach(element -> result.addVerbose(element));
+        return result;
     }
 
-    public static JsonArray createFromUrl(String url) {
-        try {
-            String result = HttpClient.create().get(url).readResponse();
-            //System.out.println(result);
-            return JsonArray.create(result);
-        }
-        catch (Exception ex) {
-            return null;
-        }
-
+    public static JsonArray create(String source) {
+        return new JsonArray(new JSONArray(source));
     }
 
     JsonArray(JSONArray imp) {
