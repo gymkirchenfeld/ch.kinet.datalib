@@ -50,46 +50,51 @@ public final class Mailer {
         this.port = port;
     }
 
-    public void sendMail(Mail mail) throws MessagingException {
-        Properties props = new Properties();
-        //props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", smtpServer);
-        props.put("mail.smtp.port", String.valueOf(port));
-        Session session = Session.getInstance(props);
-        final MimeMessage message = new MimeMessage(session);
-        message.setFrom(from);
-        for (String recipient : mail.getTo()) {
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
-        }
-
-        for (String recipient : mail.getCc()) {
-            message.addRecipient(Message.RecipientType.CC, new InternetAddress(recipient));
-        }
-
-        for (String recipient : mail.getBcc()) {
-            message.addRecipient(Message.RecipientType.BCC, new InternetAddress(recipient));
-        }
-
-        message.setSubject(mail.getSubject());
-        if (mail.attachments.isEmpty()) {
-            message.setContent(mail.getBody(), "text/plain; charset=UTF-8");
-        }
-        else {
-            Multipart multipart = new MimeMultipart();
-            BodyPart text = new MimeBodyPart();
-            text.setText(mail.getBody());
-            multipart.addBodyPart(text);
-            for (Data attachment : mail.attachments) {
-                MimeBodyPart part = new MimeBodyPart();
-                part.setDataHandler(new DataHandler(new Adapter(attachment)));
-                part.setFileName(attachment.fileName());
-                multipart.addBodyPart(part);
+    public void sendMail(Mail mail) {
+        try {
+            Properties props = new Properties();
+            //props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.host", smtpServer);
+            props.put("mail.smtp.port", String.valueOf(port));
+            Session session = Session.getInstance(props);
+            final MimeMessage message = new MimeMessage(session);
+            message.setFrom(from);
+            for (String recipient : mail.getTo()) {
+                message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
             }
 
-            message.setContent(multipart);
-        }
+            for (String recipient : mail.getCc()) {
+                message.addRecipient(Message.RecipientType.CC, new InternetAddress(recipient));
+            }
 
-        Transport.send(message);
+            for (String recipient : mail.getBcc()) {
+                message.addRecipient(Message.RecipientType.BCC, new InternetAddress(recipient));
+            }
+
+            message.setSubject(mail.getSubject());
+            if (mail.attachments.isEmpty()) {
+                message.setContent(mail.getBody(), "text/plain; charset=UTF-8");
+            }
+            else {
+                Multipart multipart = new MimeMultipart();
+                BodyPart text = new MimeBodyPart();
+                text.setText(mail.getBody());
+                multipart.addBodyPart(text);
+                for (Data attachment : mail.attachments) {
+                    MimeBodyPart part = new MimeBodyPart();
+                    part.setDataHandler(new DataHandler(new Adapter(attachment)));
+                    part.setFileName(attachment.fileName());
+                    multipart.addBodyPart(part);
+                }
+
+                message.setContent(multipart);
+            }
+
+            Transport.send(message);
+        }
+        catch (MessagingException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private final class Adapter implements DataSource {
