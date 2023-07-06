@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 - 2021 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2011 - 2023 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -40,12 +40,7 @@ public final class Date implements Comparable<Date> {
             return new SimpleDateFormat("dd.MM.yyyy");
         }
     };
-    private static final ThreadLocal<SimpleDateFormat> DM_FORMAT = new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("dd.MM");
-        }
-    };
+
     private static final ThreadLocal<SimpleDateFormat> ICALENDAR_FORMAT = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
@@ -56,18 +51,6 @@ public final class Date implements Comparable<Date> {
         @Override
         protected SimpleDateFormat initialValue() {
             return new SimpleDateFormat("yyyy-MM-dd");
-        }
-    };
-    private static final ThreadLocal<SimpleDateFormat> JSON_FORMAT = new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");   // example: 2012-04-23T18:25:43.511Z
-        }
-    };
-    private static final ThreadLocal<SimpleDateFormat> MY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("MM.yyyy");
         }
     };
     private static final ThreadLocal<SimpleDateFormat> LONG_FORMAT = new ThreadLocal<SimpleDateFormat>() {
@@ -110,6 +93,10 @@ public final class Date implements Comparable<Date> {
         final Calendar calendar = new GregorianCalendar();
         calendar.set(year, month - 1, day);
         return new Date(calendar);
+    }
+
+    public static String formatDMY(Date date) {
+        return date == null ? "" : DMY_FORMAT.get().format(date.toJavaDate());
     }
 
     public static Date from(long value) {
@@ -197,43 +184,6 @@ public final class Date implements Comparable<Date> {
         }
         catch (final ParseException ex) {
             return defaultValue;
-        }
-    }
-
-    /**
-     * Parses a date from a json-string. The string must have the format 'yyyy-MM-dd'T'HH:mm:ss.SSS'Z''. Returns null if
-     * the string is null or empty. Throws a ParseException if the string does not represent a valid date
-     *
-     * @param value string to be parsed
-     * @return date represented by value or null
-     * @throws java.text.ParseException if <code>value</code> does not represent a valid date.
-     */
-    @Deprecated
-    public static Date parseJSON(String value) throws ParseException {
-        if (Util.isEmpty(value)) {
-            return null;
-        }
-        String dateString = value.split("T")[0] + "T00:00:00.000Z";
-        return from(JSON_FORMAT.get().parse(dateString));
-    }
-
-    /**
-     * Parses a date from a json-string. The string must have the format 'yyyy-MM-dd'T'HH:mm:ss.SSS'Z''. Returns null if
-     * the string does not represent a valid date.
-     *
-     * @param value string to be parsed
-     * @return date represented by value or null
-     */
-    @Deprecated
-    public static Date tryParseJSON(String value) {
-        try {
-            return parseJSON(value);
-        }
-        catch (final NumberFormatException ex) {
-            return null;
-        }
-        catch (final ParseException ex) {
-            return null;
         }
     }
 
@@ -358,18 +308,8 @@ public final class Date implements Comparable<Date> {
         return DMY_FORMAT.get().format(toJavaDate());
     }
 
-    @Deprecated
-    public String formatDM() {
-        return DM_FORMAT.get().format(toJavaDate());
-    }
-
     public String formatICalendar() {
         return ICALENDAR_FORMAT.get().format(toJavaDate());
-    }
-
-    @Deprecated
-    public String formatJSON() {
-        return JSON_FORMAT.get().format(toJavaDate());
     }
 
     public String formatISO8601() {
@@ -380,22 +320,12 @@ public final class Date implements Comparable<Date> {
         return LONG_FORMAT.get().format(toJavaDate());
     }
 
-    @Deprecated
-    public String formatMY() {
-        return MY_FORMAT.get().format(toJavaDate());
-    }
-
     public String formatShort() {
         return SHORT_FORMAT.get().format(toJavaDate());
     }
 
     public String formatText() {
         return TEXT_FORMAT.get().format(toJavaDate());
-    }
-
-    @Deprecated
-    public String formatYMD() {
-        return YMD_FORMAT.get().format(toJavaDate());
     }
 
     public int getDay() {
