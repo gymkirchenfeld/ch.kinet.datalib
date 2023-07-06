@@ -96,7 +96,7 @@ public final class Date implements Comparable<Date> {
     }
 
     public static String formatDMY(Date date) {
-        return date == null ? "" : DMY_FORMAT.get().format(date.toJavaDate());
+        return date == null ? null : DMY_FORMAT.get().format(date.toJavaDate());
     }
 
     public static Date from(long value) {
