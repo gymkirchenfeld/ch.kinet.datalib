@@ -27,6 +27,8 @@ import io.undertow.util.HttpString;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -234,10 +236,26 @@ public final class Server implements HttpHandler {
         exchange.endExchange();
     }
 
+    private static String encodeURIComponent(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8")
+                .replaceAll("\\+", "%20")
+                .replaceAll("\\%21", "!")
+                .replaceAll("\\%27", "'")
+                .replaceAll("\\%28", "(")
+                .replaceAll("\\%29", ")")
+                .replaceAll("\\%7E", "~");
+        }
+        // This exception should never occur.
+        catch (UnsupportedEncodingException e) {
+            return s;
+        }
+
+    }
+
     private String createContentDispositionHeader(String fileName) {
-        StringBuilder result = new StringBuilder("attachment; filename=\"");
-        result.append(fileName);
-        result.append("\"");
+        StringBuilder result = new StringBuilder("attachment; filename*=UTF-8''");
+        result.append(encodeURIComponent(fileName));
         return result.toString();
     }
 }
