@@ -18,6 +18,7 @@ package ch.kinet.http;
 
 import ch.kinet.Data;
 import ch.kinet.JsonObject;
+import ch.kinet.Util;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -134,6 +135,10 @@ public final class Server implements HttpHandler {
 
     private Response handleRequestWithBody(HttpServerExchange exchange, Request.Method method) {
         String contentType = exchange.getRequestHeaders().getFirst(Headers.CONTENT_TYPE);
+        if (Util.isEmpty(contentType)) {
+            return Response.unsupportedMediaType();
+        }
+
         int pos = contentType.indexOf(';');
         if (pos >= 0) {
             contentType = contentType.substring(0, pos);
