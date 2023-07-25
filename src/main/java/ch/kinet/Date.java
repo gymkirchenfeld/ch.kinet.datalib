@@ -23,7 +23,6 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * This class represents a date of the Gregorian calendar.
@@ -139,10 +138,6 @@ public final class Date implements Comparable<Date> {
         }
 
         return from(DMY_FORMAT.get().parse(value));
-    }
-
-    public static DateSpan span(Date startDay, Date endDay) {
-        return new DateSpanImp(startDay, endDay);
     }
 
     /**
@@ -426,105 +421,5 @@ public final class Date implements Comparable<Date> {
         result.put(Calendar.SATURDAY, DayOfWeek.Saturday);
         result.put(Calendar.SUNDAY, DayOfWeek.Sunday);
         return result;
-    }
-
-    private static class DateSpanImp implements DateSpan {
-
-        private final Date startDate;
-        private final Date endDate;
-
-        private DateSpanImp(Date startDay, Date endDay) {
-            this.startDate = startDay;
-            this.endDate = endDay;
-        }
-
-        @Override
-        public boolean equals(Object object) {
-            if (object instanceof DateSpan) {
-                final DateSpan other = (DateSpan) object;
-                return Util.equal(startDate, other.getStartDate()) && Util.equal(endDate, other.getEndDate());
-            }
-            else {
-                return super.equals(object);
-            }
-        }
-
-        @Override
-        public boolean contains(Date day) {
-            return day != null && day.between(startDate, endDate);
-        }
-
-        @Override
-        public Date getEndDate() {
-            return endDate;
-        }
-
-        @Override
-        public Date getStartDate() {
-            return startDate;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 5;
-            hash = 23 * hash + Objects.hashCode(startDate);
-            hash = 23 * hash + Objects.hashCode(endDate);
-            return hash;
-        }
-
-        @Override
-        public boolean overlaps(DateSpan other) {
-            if (other == null) {
-                return false;
-            }
-
-            final Date otherStart = other.getStartDate();
-            final Date otherEnd = other.getEndDate();
-            // an interval without start and end always overlaps
-            if ((startDate == null && endDate == null) || (otherStart == null && otherEnd == null)) {
-                return true;
-            }
-
-            // two intervals without start or end always overlap
-            if ((startDate == null && otherStart == null) || (endDate == null && otherEnd == null)) {
-                return true;
-            }
-
-            // here, both intervals have either a start or an end or both
-            if (startDate == null || otherEnd == null) {
-                return !endDate.before(otherStart);
-            }
-
-            if (endDate == null || otherStart == null) {
-                return !startDate.after(otherEnd);
-            }
-
-            return !endDate.before(otherStart) && !startDate.after(otherEnd);
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder result = new StringBuilder();
-            result.append(getStartDateText());
-            result.append(" – ");
-            result.append(getEndDateText());
-            return result.toString();
-        }
-
-        private String getEndDateText() {
-            if (endDate == null) {
-                return null;
-            }
-
-            return endDate.formatDMY();
-        }
-
-        private String getStartDateText() {
-            if (startDate == null) {
-                return null;
-            }
-
-            return startDate.formatDMY();
-        }
     }
 }

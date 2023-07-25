@@ -16,17 +16,121 @@
  */
 package ch.kinet;
 
-public interface DateSpan {
+import java.util.Objects;
 
-    public static boolean isOpen(DateSpan dateSpan) {
-        return dateSpan.getEndDate() == null || dateSpan.getStartDate() == null;
+public final class DateSpan implements DateSpanI {
+
+    private Date startDate;
+    private Date endDate;
+
+    public static DateSpan create() {
+        return new DateSpan(null, null);
     }
 
-    boolean contains(Date date);
+    public static DateSpan create(Date date) {
+        return new DateSpan(date, date);
+    }
 
-    Date getEndDate();
+    public static DateSpan create(Date startDate, Date endDate) {
+        return new DateSpan(startDate, endDate);
+    }
 
-    Date getStartDate();
+    private DateSpan(Date startDay, Date endDay) {
+        this.startDate = startDay;
+        this.endDate = endDay;
+    }
 
-    boolean overlaps(DateSpan other);
+    public boolean after(Date date) {
+        return startDate != null && date != null && startDate.after(date);
+    }
+
+    public boolean before(Date date) {
+        return endDate != null && date != null && endDate.before(date);
+    }
+
+    @Override
+    public boolean contains(Date day) {
+        return day != null && day.between(startDate, endDate);
+    }
+
+    @Override
+    public String durationText() {
+        StringBuilder result = new StringBuilder();
+        result.append(getStartDateText());
+        result.append(" – ");
+        result.append(getEndDateText());
+        return result.toString();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof DateSpan) {
+            DateSpan other = (DateSpan) object;
+            return Util.equal(startDate, other.startDate) && Util.equal(endDate, other.endDate);
+        }
+        else {
+            return super.equals(object);
+        }
+    }
+
+    @Override
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    @Override
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 23 * hash + Objects.hashCode(startDate);
+        hash = 23 * hash + Objects.hashCode(endDate);
+        return hash;
+    }
+
+    @Override
+    public boolean isOpen() {
+        return startDate == null || endDate == null;
+    }
+
+    @Override
+    public boolean isValid() {
+        return isOpen() || !startDate.after(endDate);
+    }
+
+    @Override
+    public boolean overlapsWith(DateSpanI other) {
+        if (other == null) {
+            return false;
+        }
+
+        return !(after(other.getEndDate()) || before(other.getStartDate()));
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    private String getEndDateText() {
+        if (endDate == null) {
+            return null;
+        }
+
+        return endDate.formatDMY();
+    }
+
+    private String getStartDateText() {
+        if (startDate == null) {
+            return null;
+        }
+
+        return startDate.formatDMY();
+    }
 }

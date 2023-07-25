@@ -18,6 +18,11 @@ package ch.kinet;
 
 public abstract class Dict {
 
+    private static final String START_DATE = "startDate";
+    private static final String START_TIME = "startTime";
+    private static final String END_DATE = "endDate";
+    private static final String END_TIME = "endTime";
+
     public abstract boolean getBoolean(String key, boolean defaultValue);
 
     public final Date getDate(String key) {
@@ -42,7 +47,7 @@ public abstract class Dict {
      * @return date span
      */
     public final DateSpan getDateSpan() {
-        return Date.span(getDate("startDate"), getDate("endDate"));
+        return DateSpan.create(getDate(START_DATE), getDate(END_DATE));
     }
 
     public abstract int getInt(String key, int defaultValue);
