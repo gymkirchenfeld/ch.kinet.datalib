@@ -34,7 +34,7 @@ public final class ICalendar {
         data.append("METHOD:PUBLISH\n");
     }
 
-    public void addEvent(String uid, String title, DateSpan duration) {
+    public void addEvent(String uid, String title, DateSpanI duration) {
         addEvent(uid, title, duration.getStartDate(), null, duration.getEndDate(), null);
     }
 

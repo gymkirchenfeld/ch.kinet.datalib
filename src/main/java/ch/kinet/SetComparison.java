@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2018 - 2024 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -19,43 +19,30 @@ package ch.kinet;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class SetComparison<T> {
 
     private final Set<T> oldItems;
     private final Set<T> newItems;
 
+    public static <T> SetComparison<T> create(Stream<T> oldItems, Stream<T> newItems) {
+        return new SetComparison<>(oldItems.collect(Collectors.toSet()), newItems.collect(Collectors.toSet()));
+    }
+
     public static <T> SetComparison<T> create(Collection<T> oldItems, Collection<T> newItems) {
-        SetComparison<T> result = new SetComparison<>();
-        result.addOld(oldItems);
-        result.addNew(newItems);
-        return result;
+        return new SetComparison<>(new HashSet<>(oldItems), new HashSet<>(newItems));
     }
 
-    private SetComparison() {
-        this.oldItems = new HashSet<>();
-        this.newItems = new HashSet<>();
-    }
-
-    public void addNew(final Collection<T> items) {
-        if (items == null) {
-            return;
-        }
-
-        newItems.addAll(items);
-    }
-
-    public void addOld(final Collection<T> items) {
-        if (items == null) {
-            return;
-        }
-
-        oldItems.addAll(items);
+    private SetComparison(Set<T> oldItems, Set<T> newItems) {
+        this.oldItems = oldItems;
+        this.newItems = newItems;
     }
 
     public Set<T> getAdded() {
-        final Set<T> result = new HashSet<>();
-        for (final T newItem : newItems) {
+        Set<T> result = new HashSet<>();
+        for (T newItem : newItems) {
             if (!oldItems.contains(newItem)) {
                 result.add(newItem);
             }
@@ -65,8 +52,8 @@ public final class SetComparison<T> {
     }
 
     public Set<T> getRemoved() {
-        final Set<T> result = new HashSet<>();
-        for (final T oldItem : oldItems) {
+        Set<T> result = new HashSet<>();
+        for (T oldItem : oldItems) {
             if (!newItems.contains(oldItem)) {
                 result.add(oldItem);
             }
@@ -78,7 +65,7 @@ public final class SetComparison<T> {
     public boolean hasChanges() {
         return !(getAdded().isEmpty() && getRemoved().isEmpty());
     }
-  
+
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();

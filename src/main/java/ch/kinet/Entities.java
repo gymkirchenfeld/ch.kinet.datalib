@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2022 - 2024 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -48,11 +48,7 @@ public final class Entities<T extends Entity> implements Iterable<T> {
     }
 
     public T first() {
-        if (isEmpty()) {
-            return null;
-        }
-
-        return list.get(0);
+        return get(0);
     }
 
     @Override
@@ -61,7 +57,7 @@ public final class Entities<T extends Entity> implements Iterable<T> {
     }
 
     public T get(int index) {
-        return list.get(index);
+        return index >= 0 && index < list.size() ? list.get(index) : null;
     }
 
     public int indexOf(T item) {
@@ -78,8 +74,7 @@ public final class Entities<T extends Entity> implements Iterable<T> {
     }
 
     public T last() {
-        int size = list.size();
-        return size == 0 ? null : list.get(size - 1);
+        return get(list.size() - 1);
     }
 
     public void remove(T item) {

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2016 - 2022 Stefan Rothe
+ * Copyright (c) 2016 - 2024 Stefan Rothe
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ package ch.kinet;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLConnection;
 import java.security.KeyStore;
 import javax.net.ssl.HttpsURLConnection;
@@ -103,7 +103,7 @@ public final class HttpClient {
 
     private HttpConnection openConnection(String url, String method) {
         try {
-            URLConnection connection = new URL(url).openConnection();
+            URLConnection connection = URI.create(url).toURL().openConnection();
             if (connection instanceof HttpsURLConnection && sslContext != null) {
                 ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
             }

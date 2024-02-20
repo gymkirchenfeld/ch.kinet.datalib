@@ -16,8 +16,8 @@
  */
 package ch.kinet.sql;
 
-import ch.kinet.DateSpan;
 import java.util.Collection;
+import ch.kinet.DateSpanI;
 
 public abstract class Condition {
 
@@ -33,7 +33,7 @@ public abstract class Condition {
         return new Between(parameterName, lowerBound, upperBound);
     }
 
-    public static Condition during(String parameterName, DateSpan duration) {
+    public static Condition during(String parameterName, DateSpanI duration) {
         if (duration.getEndDate() == null) {
             return greaterOrEqual(parameterName, duration.getStartDate());
         }
