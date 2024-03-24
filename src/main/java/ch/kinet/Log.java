@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2022 by Stefan Rothe
+ * Copyright (C) 2012 - 2023 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -78,7 +78,7 @@ public final class Log {
     }
 
     private void stackTrace(Throwable throwable) {
-        final StackTraceElement[] stackTrace = throwable.getStackTrace();
+        StackTraceElement[] stackTrace = throwable.getStackTrace();
         for (int i = 0; i < stackTrace.length; ++i) {
             addEntry(ERROR, stackTrace[i].toString());
         }
@@ -101,11 +101,11 @@ public final class Log {
     }
 
     public Mail createMail(String subject, String to) {
-        final Mail result = Mail.create();
+        Mail result = Mail.create();
         result.addTo(to);
         result.setSubject(subject);
-        for (final Entry entry : toList()) {
-            final String line = entry.toString();
+        for (Entry entry : toList()) {
+            String line = entry.toString();
             result.addLine(line);
         }
 
@@ -160,7 +160,7 @@ public final class Log {
     private void addEntry(int level, String message) {
         synchronized (lock) {
             ++nextEntryId;
-            final Entry entry = new Entry(nextEntryId, level, message);
+            Entry entry = new Entry(nextEntryId, level, message);
             entries.add(entry);
             if (level > maxLevel) {
                 maxLevel = level;

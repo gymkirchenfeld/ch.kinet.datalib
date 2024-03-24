@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 - 2023 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2020 - 2024 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,6 +33,15 @@ public final class DateSpan implements DateSpanI {
 
     public static DateSpan create(Date startDate, Date endDate) {
         return new DateSpan(startDate, endDate);
+    }
+
+    public static DateSpan workWeek(Date date) {
+        Date monday = date;
+        while (monday.getDayOfWeek() != Date.DayOfWeek.Monday) {
+            monday = monday.addDays(-1);
+        }
+
+        return create(monday, monday.addDays(5));
     }
 
     private DateSpan(Date startDay, Date endDay) {

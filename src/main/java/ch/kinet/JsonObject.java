@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2016 - 2024 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -83,21 +83,6 @@ public final class JsonObject extends Dict implements Json {
         }
 
         return Data.jsonEncodedBinary(object);
-    }
-
-    @Override
-    public Date getDate(String key, Date defaultValue) {
-        if (imp.isNull(key)) {
-            return defaultValue;
-        }
-
-        final String raw = imp.optString(key);
-        Date candidate = Date.tryParseISO8601(raw, null);
-        if (candidate == null) {
-            candidate = Date.tryParseDMY(raw);
-        }
-
-        return candidate;
     }
 
     @Override

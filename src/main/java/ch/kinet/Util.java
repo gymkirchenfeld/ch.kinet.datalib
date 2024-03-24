@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 - 2023 by Stefan Rothe
+ * Copyright (C) 2016 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -86,22 +86,6 @@ public final class Util {
         return result;
     }
 
-    /**
-     * Returns the first non-null argument.
-     *
-     * @param args the arguments
-     * @return the first non-null argument
-     */
-    public static String coalesce(String... args) {
-        for (final String s : args) {
-            if (s != null) {
-                return s;
-            }
-        }
-
-        return null;
-    }
-
     public static <T> int compare(Comparable<T> object1, T object2) {
         return compare(object1, object2, NullPosition.FIRST);
     }
@@ -151,18 +135,6 @@ public final class Util {
 
     public static int compare(int int1, int int2) {
         return int1 - int2;
-    }
-
-    public static <T> String concat(Stream<T> stream, String separator) {
-        StringBuilder result = new StringBuilder();
-        stream.forEachOrdered(item -> {
-            if (result.length() > 0) {
-                result.append(separator);
-            }
-
-            result.append(item);
-        });
-        return result.toString();
     }
 
     public static String concat(Iterable<?> elements, String separator) {
@@ -379,7 +351,7 @@ public final class Util {
     }
 
     public static String sanitizeFileName(String value) {
-        return replaceAll(value, FILE_NAME_REPLACE_MAP);
+        return replaceAll(Util.replaceAll(value, NAME_REPLACE_MAP), FILE_NAME_REPLACE_MAP).replaceAll("\\P{Print}", "");
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 by Stefan Rothe
+ * Copyright (C) 2021 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,17 @@ public abstract class Dict {
         return getDate(key, null);
     }
 
-    public abstract Date getDate(String key, Date defaultValue);
+    public final Date getDate(String key, Date defaultValue) {
+        Date result = Date.tryParseISO8601(getString(key), null);
+        if (result == null) {
+            result = Date.tryParseDMY(getString(key));
+            if (result == null) {
+                result = defaultValue;
+            }
+        }
+
+        return result;
+    }
 
     public final int getInt(String key) {
         return getInt(key, 0);
@@ -69,6 +79,10 @@ public abstract class Dict {
         }
 
         return Time.parseISO8601(value, defaultValue);
+    }
+
+    public final TimeSpan getTimeSpan() {
+        return TimeSpan.create(getDate(START_DATE), getTime(START_TIME), getDate(END_DATE), getTime(END_TIME));
     }
 
     /**

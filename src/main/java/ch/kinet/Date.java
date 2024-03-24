@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 - 2023 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2011 - 2024 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -39,7 +39,6 @@ public final class Date implements Comparable<Date> {
             return new SimpleDateFormat("dd.MM.yyyy");
         }
     };
-
     private static final ThreadLocal<SimpleDateFormat> ICALENDAR_FORMAT = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
@@ -160,11 +159,12 @@ public final class Date implements Comparable<Date> {
     }
 
     /**
-     * Parses a date from an ISO 8601 string. The string must have the format 'yyyy-MM-dd'. Returns null if the string
-     * does not represent a valid date.
+     * Parses a date from an ISO 8601 string. The string must have the format 'yyyy-MM-dd'. Returns the specified
+     * default value if the string does not represent a valid date.
      *
      * @param value string to be parsed
-     * @return date represented by value or null
+     * @param defaultValue default value
+     * @return date represented by value or default value
      */
     public static Date tryParseISO8601(String value, Date defaultValue) {
         if (Util.isEmpty(value)) {

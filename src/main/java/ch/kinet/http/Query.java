@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2018 - 2024 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,6 @@
  */
 package ch.kinet.http;
 
-import ch.kinet.Date;
 import ch.kinet.Dict;
 import ch.kinet.Json;
 import ch.kinet.JsonArray;
@@ -37,6 +36,15 @@ public final class Query extends Dict implements Json {
         this.query = query;
     }
 
+    public boolean getBoolean(String key) {
+        if (!hasKey(key)) {
+            return false;
+        }
+
+        String value = this.getString(key, "");
+        return "true".equals(value) || value.isBlank();
+    }
+
     @Override
     public boolean getBoolean(String key, boolean defaultValue) {
         if (!hasKey(key)) {
@@ -44,19 +52,6 @@ public final class Query extends Dict implements Json {
         }
 
         return "true".equals(this.getString(key));
-    }
-
-    @Override
-    public Date getDate(String key, Date defaultValue) {
-        Date result = Date.tryParseISO8601(getString(key), null);
-        if (result == null) {
-            result = Date.tryParseDMY(getString(key));
-            if (result == null) {
-                result = defaultValue;
-            }
-        }
-
-        return result;
     }
 
     @Override

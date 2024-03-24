@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 - 2023 by Stefan Rothe
+ * Copyright (C) 2016 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -60,6 +60,12 @@ public final class JsonArray {
 
     public static JsonArray create(String source) {
         return new JsonArray(new JSONArray(source));
+    }
+
+    public static JsonArray fromStrings(Stream<String> elements) {
+        final JsonArray result = new JsonArray(new JSONArray());
+        elements.forEachOrdered(element -> result.add(element));
+        return result;
     }
 
     JsonArray(JSONArray imp) {

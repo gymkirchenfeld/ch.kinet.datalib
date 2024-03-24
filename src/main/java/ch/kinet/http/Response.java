@@ -39,10 +39,6 @@ public class Response {
         return new Response(Status.BAD_REQUEST, Data.text(message));
     }
 
-    public static Response created() {
-        return new Response(Status.CREATED);
-    }
-
     public static Response createdJsonVerbose(Json object) {
         if (object == null) {
             return internalServerError();
