@@ -75,10 +75,18 @@ public class Response {
         return new Response(Status.OK, Data.json(root));
     }
 
-    public static Response jsonArray(JsonArray array) {
+    public static Response jsonArray(Stream<JsonObject> stream) {
         JsonObject root = JsonObject.create();
-        root.put("result", array);
+        root.put("result", JsonArray.create(stream));
         return new Response(Status.OK, Data.json(root));
+    }
+
+    public static Response jsonArrayTerse(Stream<? extends Json> stream) {
+        return jsonArray(stream.map(Json::toJsonTerse));
+    }
+
+    public static Response jsonArrayVerbose(Stream<? extends Json> stream) {
+        return jsonArray(stream.map(Json::toJsonVerbose));
     }
 
     public static Response jsonTerse(Json result) {
@@ -91,12 +99,6 @@ public class Response {
         return new Response(Status.OK, Data.json(root));
     }
 
-    public static Response jsonTerse(Stream<? extends Json> stream) {
-        JsonObject root = JsonObject.create();
-        root.put("result", JsonArray.createTerse(stream));
-        return new Response(Status.OK, Data.json(root));
-    }
-
     public static Response jsonVerbose(Json result) {
         if (result == null) {
             return notFound();
@@ -104,12 +106,6 @@ public class Response {
 
         JsonObject root = JsonObject.create();
         root.putVerbose("result", result);
-        return new Response(Status.OK, Data.json(root));
-    }
-
-    public static Response jsonVerbose(Stream<? extends Json> stream) {
-        JsonObject root = JsonObject.create();
-        root.put("result", JsonArray.createVerbose(stream));
         return new Response(Status.OK, Data.json(root));
     }
 
