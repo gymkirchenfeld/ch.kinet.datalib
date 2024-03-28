@@ -47,7 +47,12 @@ public final class Util {
     private static final Collator COLLATOR = initCollator();
     private static final DecimalFormat CURRENCY_FORMAT = initCurrencyFormat();
     private static final String EMAIL_REGEX = "(?:[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
+    private static final ThreadLocal<Pattern> EMAIL_PATTERN = new ThreadLocal<Pattern>() {
+        @Override
+        protected Pattern initialValue() {
+            return Pattern.compile(EMAIL_REGEX);
+        }
+    };
     private static final char[] HEX_DIGITS = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
@@ -295,6 +300,14 @@ public final class Util {
         return s == null || s.isEmpty();
     }
 
+    public static boolean isValidEmailAddress(String email) {
+        if (isEmpty(email)) {
+            return true;
+        }
+
+        return EMAIL_PATTERN.get().matcher(email).matches();
+    }
+
     public static int length(String s) {
         if (s == null) {
             return 0;
@@ -475,14 +488,6 @@ public final class Util {
         catch (UnsupportedEncodingException ex) {
             return s;
         }
-    }
-
-    public static boolean validEmailAddress(String email) {
-        if (isEmpty(email)) {
-            return true;
-        }
-
-        return EMAIL_PATTERN.matcher(email).matches();
     }
 
     private static String hexEncode(byte[] byteArray) {
