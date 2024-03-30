@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2021 - 2024 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -37,6 +37,20 @@ public class Response {
 
     public static Response badRequest(String message) {
         return new Response(Status.BAD_REQUEST, Data.text(message));
+    }
+
+    public static Response created() {
+        return new Response(Status.CREATED);
+    }
+
+    public static Response createdJsonTerse(Json object) {
+        if (object == null) {
+            return internalServerError();
+        }
+
+        JsonObject root = JsonObject.create();
+        root.putTerse("result", object);
+        return new Response(Status.CREATED, Data.json(root));
     }
 
     public static Response createdJsonVerbose(Json object) {
