@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 - 2021 by Stefan Rothe
+ * Copyright (C) 2013 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@ public class QueryException extends LdapException {
     }
 
     private static String buildMessage(Query query, Throwable cause) {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         result.append("Query '");
         result.append(query);
         result.append("' failed: ");

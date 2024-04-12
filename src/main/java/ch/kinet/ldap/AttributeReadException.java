@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 - 2021 by Stefan Rothe
+ * Copyright (C) 2013 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@ public class AttributeReadException extends LdapException {
     }
 
     private static String buildMessage(Name dn, String attributeName, Throwable cause) {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         result.append("Reading value of attribute '");
         result.append(attributeName);
         result.append("' in the context '");

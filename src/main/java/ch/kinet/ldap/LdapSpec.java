@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +30,7 @@ public final class LdapSpec {
     }
 
     public static LdapSpec create(LdapSpec orig) {
-        final LdapSpec result = new LdapSpec();
+        LdapSpec result = new LdapSpec();
         result.domain = orig.domain;
         result.password = orig.password;
         result.port = orig.port;
@@ -98,7 +98,7 @@ public final class LdapSpec {
     }
 
     public String url() {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         result.append(getProtocol());
         result.append(getServerName());
         result.append(':');

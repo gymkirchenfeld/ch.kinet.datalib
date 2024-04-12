@@ -22,6 +22,8 @@ import ch.kinet.ldap.LdapException;
 import ch.kinet.ldap.Name;
 import ch.kinet.ldap.Query;
 import ch.kinet.ldap.SearchResult;
+import java.util.stream.Stream;
+import java.util.stream.Stream.Builder;
 
 public final class AdConnection extends LdapConnection {
 
@@ -76,16 +78,16 @@ public final class AdConnection extends LdapConnection {
         return result;
     }
 
-    public AdUser[] loadUsers(Name context) throws LdapException {
+    public Stream<AdUser> loadUsers(Name context) throws LdapException {
+        Builder<AdUser> result = Stream.builder();
         final Query query = createQuery(context);
         query.setFilter(USER_FILTER);
         query.addAttributes(AdUser.ATTRIBUTES);
         final SearchResult[] searchResults = query.execute();
-        final AdUser[] result = new AdUser[searchResults.length];
         for (int i = 0; i < searchResults.length; ++i) {
-            result[i] = new AdUser(this, searchResults[i]);
+            result.add(new AdUser(this, searchResults[i]));
         }
 
-        return result;
+        return result.build();
     }
 }

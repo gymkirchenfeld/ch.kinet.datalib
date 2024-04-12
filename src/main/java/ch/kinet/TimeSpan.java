@@ -22,6 +22,10 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
         return new TimeSpan(startDate, startTime, endDate, endTime);
     }
 
+    public static TimeSpan create(Date startDate, Date endDate) {
+        return new TimeSpan(startDate, null, endDate, null);
+    }
+
     private final Date startDate;
     private final Time startTime;
     private final Date endDate;
@@ -86,18 +90,22 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
         return true;
     }
 
+    @Override
     public Date getEndDate() {
         return endDate;
     }
 
+    @Override
     public Time getEndTime() {
         return endTime;
     }
 
+    @Override
     public Date getStartDate() {
         return startDate;
     }
 
+    @Override
     public Time getStartTime() {
         return startTime;
     }
@@ -140,7 +148,7 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
     public boolean overlapsWith(TimeSpanI other) {
         Timestamp otherStart = makeStartDateTime(other.getStartDate(), other.getStartTime());
         Timestamp otherEnd = makeEndDateTime(other.getEndDate(), other.getEndTime());
-        return !(startDateTime().after(otherEnd) || endDateTime().before(otherStart));
+        return startDateTime().before(otherEnd) || endDateTime().after(otherStart);
     }
 
     public Timestamp startDateTime() {

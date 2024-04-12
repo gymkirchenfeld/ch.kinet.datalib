@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -31,9 +31,9 @@ public class Name implements Comparable<Name> {
             throw new NullPointerException("url");
         }
 
-        final String[] domainParts = url.split("\\.");
-        final String[] prefixes = new String[domainParts.length];
-        final String[] postfixes = new String[domainParts.length];
+        String[] domainParts = url.split("\\.");
+        String[] prefixes = new String[domainParts.length];
+        String[] postfixes = new String[domainParts.length];
         for (int i = 0; i < domainParts.length; ++i) {
             prefixes[i] = DC;
             postfixes[i] = domainParts[i];
@@ -43,9 +43,9 @@ public class Name implements Comparable<Name> {
     }
 
     public static Name parse(String name) {
-        final String[] parts = name.split(",");
-        final String[] prefixes = new String[parts.length];
-        final String[] postfixes = new String[parts.length];
+        String[] parts = name.split(",");
+        String[] prefixes = new String[parts.length];
+        String[] postfixes = new String[parts.length];
         for (int i = 0; i < parts.length; ++i) {
             String[] subParts = parts[i].split("=");
             prefixes[i] = subParts[0].toUpperCase();
@@ -103,14 +103,14 @@ public class Name implements Comparable<Name> {
     }
 
     public Name subContext(String name) {
-        final String[] parts = name.split("=");
+        String[] parts = name.split("=");
         return subContext(parts[0], parts[1]);
     }
 
     public Name subContext(String prefix, String postfix) {
-        final int length = prefixes.length;
-        final String[] newPrefixes = new String[length + 1];
-        final String[] newPostfixes = new String[length + 1];
+        int length = prefixes.length;
+        String[] newPrefixes = new String[length + 1];
+        String[] newPostfixes = new String[length + 1];
         newPrefixes[0] = prefix.toUpperCase();
         newPostfixes[0] = postfix;
         System.arraycopy(prefixes, 0, newPrefixes, 1, length);
@@ -120,7 +120,7 @@ public class Name implements Comparable<Name> {
 
     @Override
     public String toString() {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < prefixes.length; ++i) {
             if (i > 0) {
                 result.append(',');

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 - 2021 by Stefan Rothe
+ * Copyright (C) 2015 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@ public class NoPermissionException extends LdapException {
     }
 
     private static String buildMessage(String operation, Name dn) {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         result.append(operation);
         result.append(" of context '");
         result.append(dn);

@@ -66,6 +66,14 @@ public final class SetComparison<T> {
         return !(getAdded().isEmpty() && getRemoved().isEmpty());
     }
 
+    public long newCount() {
+        return newItems.size();
+    }
+
+    public long oldCount() {
+        return oldItems.size();
+    }
+
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();

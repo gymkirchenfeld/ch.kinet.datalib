@@ -88,8 +88,13 @@ public class AdUser extends LdapObject {
         return getAsString(GIVEN_NAME);
     }
 
-    public int getId() throws LdapException {
-        return getAsInt(EMPLOYEE_NUMBER, -1);
+    public int getId() {
+        try {
+            return getAsInt(EMPLOYEE_NUMBER, -1);
+        }
+        catch (LdapException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public String getLastName() throws LdapException {

@@ -58,9 +58,9 @@ public class Query {
 
                 Control[] controls = context.getResponseControls();
                 if (controls != null) {
-                    for (int i = 0; i < controls.length; i++) {
-                        if (controls[i] instanceof PagedResultsResponseControl) {
-                            PagedResultsResponseControl prrc = (PagedResultsResponseControl) controls[i];
+                    for (Control ctrl : controls) {
+                        if (ctrl instanceof PagedResultsResponseControl) {
+                            PagedResultsResponseControl prrc = (PagedResultsResponseControl) ctrl;
                             cookie = prrc.getCookie();
                         }
                     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2023 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -111,7 +111,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
 
     public boolean getAsBoolean(String name, boolean defaultValue) throws LdapException {
         try {
-            final String value = getAsString(name);
+            String value = getAsString(name);
             if (value == null) {
                 return defaultValue;
             }
@@ -125,7 +125,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
                     return defaultValue;
             }
         }
-        catch (final NumberFormatException ex) {
+        catch (NumberFormatException ex) {
             return defaultValue;
         }
     }
@@ -134,7 +134,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
         try {
             return Integer.parseInt(getAsString(name));
         }
-        catch (final NumberFormatException ex) {
+        catch (NumberFormatException ex) {
             return defaultValue;
         }
     }
@@ -149,7 +149,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
                 return attr.get().toString();
             }
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new AttributeReadException(dn, name, ex);
         }
     }
@@ -166,7 +166,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
             }
             return result.stream();
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new AttributeReadException(dn, name, ex);
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -40,20 +40,20 @@ public class LdapConnection {
             try {
                 context.close();
             }
-            catch (final NamingException ex) {
+            catch (NamingException ex) {
                 // ignore
             }
         }
     }
 
     public void connect(LdapSpec spec) throws LdapException {
-        final String keystore = System.getProperty("java.home") + "/lib/security/cacerts";
+        String keystore = System.getProperty("java.home") + "/lib/security/cacerts";
         System.setProperty(TRUST_STORE, keystore);
         domainName = spec.getDomain();
         rootName = Name.fromURL(spec.getDomain());
-        final String principal = userPrincipalName(spec.getUserName());
+        String principal = userPrincipalName(spec.getUserName());
 
-        final Hashtable<Object, Object> environment = new Hashtable<>();
+        Hashtable<Object, Object> environment = new Hashtable<>();
         environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         if (spec.getUseSSL()) {
             environment.put(Context.SECURITY_PROTOCOL, "ssl");
@@ -63,7 +63,7 @@ public class LdapConnection {
         environment.put(Context.SECURITY_AUTHENTICATION, "simple");
         environment.put(Context.SECURITY_PRINCIPAL, principal);
 
-        final String password = spec.getPassword().toString();
+        String password = spec.getPassword().toString();
         if (password == null || password.isEmpty()) {
             throw new AuthenticationFailedException(spec);
         }
@@ -74,10 +74,10 @@ public class LdapConnection {
         try {
             context = new InitialLdapContext(environment, null);
         }
-        catch (final AuthenticationException ex) {
+        catch (AuthenticationException ex) {
             throw new AuthenticationFailedException(spec, ex);
         }
-        catch (final Exception ex) {
+        catch (Exception ex) {
             throw new ConnectionFailedException(spec, ex);
         }
     }
@@ -90,10 +90,10 @@ public class LdapConnection {
         try {
             context.unbind(dn.toString());
         }
-        catch (final javax.naming.NoPermissionException ex) {
+        catch (javax.naming.NoPermissionException ex) {
             throw new NoPermissionException("Removing", dn);
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new OperationFailedException("Removing", dn, ex);
         }
     }
@@ -102,10 +102,10 @@ public class LdapConnection {
         try {
             context.rename(dn.toString(), newDn.toString());
         }
-        catch (final javax.naming.NoPermissionException ex) {
+        catch (javax.naming.NoPermissionException ex) {
             throw new NoPermissionException("Renaming", dn);
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new OperationFailedException("Renaming", dn, ex);
         }
     }
@@ -118,7 +118,7 @@ public class LdapConnection {
         try {
             context.modifyAttributes(dn.toString(), DirContext.ADD_ATTRIBUTE, attributes);
         }
-        catch (final javax.naming.NoPermissionException ex) {
+        catch (javax.naming.NoPermissionException ex) {
             throw new NoPermissionException("Adding attributes", dn);
         }
         catch (final NamingException ex) {
@@ -130,10 +130,10 @@ public class LdapConnection {
         try {
             context.createSubcontext(dn.toString(), attributes);
         }
-        catch (final javax.naming.NoPermissionException ex) {
+        catch (javax.naming.NoPermissionException ex) {
             throw new NoPermissionException("Creation", dn);
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new OperationFailedException("Creation", dn, ex);
         }
     }
@@ -142,10 +142,10 @@ public class LdapConnection {
         try {
             context.modifyAttributes(dn.toString(), DirContext.REMOVE_ATTRIBUTE, attributes);
         }
-        catch (final javax.naming.NoPermissionException ex) {
+        catch (javax.naming.NoPermissionException ex) {
             throw new NoPermissionException("Removing attributes", dn);
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new OperationFailedException("Removing attributes", dn, ex);
         }
     }
@@ -154,10 +154,10 @@ public class LdapConnection {
         try {
             context.modifyAttributes(dn.toString(), DirContext.REPLACE_ATTRIBUTE, attributes);
         }
-        catch (final javax.naming.NoPermissionException ex) {
+        catch (javax.naming.NoPermissionException ex) {
             throw new NoPermissionException("Updating attributes", dn);
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new OperationFailedException("Updating attributes", dn, ex);
         }
     }

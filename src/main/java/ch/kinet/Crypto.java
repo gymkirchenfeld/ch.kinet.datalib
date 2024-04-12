@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 by Tom Jampen
+ * Copyright (C) 2017 - 2024 by Tom Jampen, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,8 +23,8 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto {
 
@@ -77,6 +77,9 @@ public class Crypto {
             System.arraycopy(payload, 0, encrypted, iv.length, payload.length);
             base64enc = Base64.getEncoder().encodeToString(encrypted);
         }
+        catch (IllegalArgumentException ex) {
+            throw new CryptoException(ex);
+        }
         catch (Exception e) {
             throw new CryptoException(e);
         }
@@ -84,19 +87,36 @@ public class Crypto {
         return base64enc;
     }
 
-    public static String decrypt(String strToDecrypt, String secret) {
-        if (strToDecrypt == null) {
+    public static String decrypt(String cipherText, String secret) {
+        if (cipherText == null) {
             return null;
         }
 
-        if (strToDecrypt.startsWith("2-")) {
-            strToDecrypt = strToDecrypt.substring(2, strToDecrypt.length());
-        }
-        
-        return decryptNew(strToDecrypt, secret);
+        return decryptNew(cipherText, secret);
     }
 
-    public static String decryptNew(String strToDecrypt, String secret) {
+    public static String tryDecrypt(String cipherText, String secret, String defaultText) {
+        try {
+            return decrypt(cipherText, secret);
+        }
+        catch (CryptoException ex) {
+            return defaultText;
+        }
+    }
+
+    public static byte[] hexStringToByteArray(String s) {
+        byte[] b = new byte[s.length() / 2];
+
+        for (int i = 0; i < b.length; i++) {
+            int index = i * 2;
+            int v = Integer.parseInt(s.substring(index, index + 2), 16);
+            b[i] = (byte) v;
+        }
+
+        return b;
+    }
+
+    private static String decryptNew(String cipherText, String secret) {
         String decrypted = null;
 
         try {
@@ -104,7 +124,7 @@ public class Crypto {
             SecretKeySpec secretKeySpec = generateKey(secret);
 
             // Base64
-            byte[] base64dec = Base64.getDecoder().decode(strToDecrypt);
+            byte[] base64dec = Base64.getDecoder().decode(cipherText);
 
             // setup Cipher
             Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
@@ -119,45 +139,13 @@ public class Crypto {
             cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
             decrypted = new String(cipher.doFinal(payload));
         }
-        catch (Exception e) {
-            throw new CryptoException(e);
+        catch (IllegalArgumentException ex) {
+            throw new CryptoException(ex);
+        }
+        catch (Exception ex) {
+            throw new CryptoException(ex);
         }
 
         return decrypted;
-    }
-
-    public static String decryptOld(String strToDecrypt, String secret) {
-        String decrypted = null;
-
-        try {
-            // Key
-            byte[] key = secret.substring(0, 16).getBytes("UTF-8");
-            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-
-            // transform hex string to bytes
-            byte[] bytesToDecrypt = hexStringToByteArray(strToDecrypt);
-
-            // Cipher
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-            decrypted = new String(cipher.doFinal(bytesToDecrypt));
-        }
-        catch (Exception e) {
-            throw new CryptoException(e);
-        }
-
-        return decrypted;
-    }
-
-    public static byte[] hexStringToByteArray(String s) {
-        byte[] b = new byte[s.length() / 2];
-
-        for (int i = 0; i < b.length; i++) {
-            int index = i * 2;
-            int v = Integer.parseInt(s.substring(index, index + 2), 16);
-            b[i] = (byte) v;
-        }
-
-        return b;
     }
 }
