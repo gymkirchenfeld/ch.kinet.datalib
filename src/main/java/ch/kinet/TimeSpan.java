@@ -148,7 +148,7 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
     public boolean overlapsWith(TimeSpanI other) {
         Timestamp otherStart = makeStartDateTime(other.getStartDate(), other.getStartTime());
         Timestamp otherEnd = makeEndDateTime(other.getEndDate(), other.getEndTime());
-        return startDateTime().before(otherEnd) || endDateTime().after(otherStart);
+        return !(!startDateTime().before(otherEnd) || !endDateTime().after(otherStart));
     }
 
     public Timestamp startDateTime() {
