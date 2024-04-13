@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2023 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,10 +20,10 @@ import ch.kinet.Binary;
 import ch.kinet.Date;
 import ch.kinet.Time;
 import ch.kinet.Timestamp;
-import ch.kinet.reflect.MetaObject;
 import ch.kinet.reflect.Property;
 import java.sql.Array;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -40,57 +40,68 @@ abstract class ResultGetter {
     }
 
     static ResultGetter create(Connection connection, Property property, String columnName) {
-        final Property key = property.getType().keyProperty();
-        if (key == null) {
-            return createSimple(property, columnName);
+        ResultGetter result = createSimple(property, columnName);
+        if (result == null) {
+            Property key = property.getType().keyProperty();
+            if (key != null) {
+                result = new LookupGetter(connection, property, key);
+            }
         }
-        else {
-            return new SingleKeyGetter(connection, property, key);
+
+        if (result == null) {
+            throw new UnsupportedPropertyTypeException(property);
         }
+
+        return result;
     }
 
     private static ResultGetter createSimple(Property property, String columnName) {
-        final MetaObject<?> propertyType = property.getType();
-        if (propertyType.isClass(Binary.class)) {
+        Class<?> propertyClass = property.getPropertyClass();
+        if (propertyClass.equals(Binary.class)) {
             return new BinaryGetter(property, columnName);
         }
-        else if (propertyType.isBoolean()) {
+        else if (propertyClass.equals(Boolean.TYPE)) {
             return new BooleanGetter(property, columnName);
         }
-        else if (propertyType.isClass(Date.class)) {
+        else if (propertyClass.equals(Date.class)) {
             return new DateGetter(property, columnName);
         }
-        else if (propertyType.isDouble()) {
+        else if (propertyClass.equals(Double.TYPE)) {
             return new DoubleGetter(property, columnName);
         }
-        else if (propertyType.isInteger()) {
+        else if (propertyClass.equals(Integer.TYPE)) {
             return new IntGetter(property, columnName);
         }
-        else if (propertyType.isLong()) {
+        else if (propertyClass.equals(LocalDate.class)) {
+            return new LocalDateGetter(property, columnName);
+        }
+        else if (propertyClass.equals(Long.TYPE)) {
             return new LongGetter(property, columnName);
         }
-        else if (propertyType.isAssignableTo(Stream.class)) {
+        else if (Stream.class.isAssignableFrom(propertyClass)) {
             return new StreamGetter(property, columnName);
         }
-        else if (propertyType.isAssignableTo(Set.class)) {
+        else if (Set.class.isAssignableFrom(propertyClass)) {
             return new SetGetter(property, columnName);
         }
-        else if (propertyType.isAssignableTo(List.class)) {
+        else if (List.class.isAssignableFrom(propertyClass)) {
             return new ListGetter(property, columnName);
         }
-        else if (propertyType.isClass(String.class)) {
+        else if (propertyClass.equals(String.class)) {
             return new StringGetter(property, columnName);
         }
-        else if (propertyType.isClass(Time.class)) {
+        else if (propertyClass.equals(Time.class)) {
             return new TimeGetter(property, columnName);
         }
-        else if (propertyType.isClass(Timestamp.class)) {
+        else if (propertyClass.equals(Timestamp.class)) {
             return new TimestampGetter(property, columnName);
         }
-        else if (propertyType.isClass(UUID.class)) {
+        else if (propertyClass.equals(UUID.class)) {
             return new UUIDGetter(property, columnName);
         }
-        throw new UnsupportedPropertyTypeException(property);
+        else {
+            return null;
+        }
     }
 
     protected ResultGetter(Property property) {
@@ -109,10 +120,6 @@ abstract class ResultGetter {
 
     abstract String columnName();
 
-    final String propertyName() {
-        return property.getName();
-    }
-
     final Object getValue(ResultSet resultSet) {
         try {
             return doGetValue(resultSet);
@@ -124,14 +131,14 @@ abstract class ResultGetter {
 
     protected abstract Object doGetValue(ResultSet resultSet) throws Exception;
 
-    private static class SingleKeyGetter extends ResultGetter {
+    private static class LookupGetter extends ResultGetter {
 
         private final Lookup lookup;
         private final ResultGetter retriever;
 
-        public SingleKeyGetter(Connection connection, Property property, Property key) {
+        public LookupGetter(Connection connection, Property property, Property key) {
             super(property);
-            final String columnName = StatementBuilder.sqlName(property.getName() + key.getName());
+            String columnName = StatementBuilder.sqlName(property.getName() + key.getName());
             this.lookup = connection.lookupFor(property.getType());
             if (this.lookup == null) {
                 throw new MissingLookupException(property.getType());
@@ -235,12 +242,25 @@ abstract class ResultGetter {
         @Override
         @SuppressWarnings("unchecked")
         protected Object doGetValue(ResultSet resultSet) throws Exception {
-            final Array array = resultSet.getArray(columnName);
+            Array array = resultSet.getArray(columnName);
             if (array == null) {
                 return null;
             }
 
             return Arrays.asList((Object[]) array.getArray());
+        }
+    }
+
+    private static class LocalDateGetter extends ValueGetter {
+
+        public LocalDateGetter(Property property, String columnName) {
+            super(property, columnName);
+        }
+
+        @Override
+        protected Object doGetValue(ResultSet resultSet) throws Exception {
+            java.sql.Date value = resultSet.getDate(columnName);
+            return value == null ? null : value.toLocalDate();
         }
     }
 
@@ -265,7 +285,7 @@ abstract class ResultGetter {
         @Override
         @SuppressWarnings("unchecked")
         protected Object doGetValue(ResultSet resultSet) throws Exception {
-            final Array array = resultSet.getArray(columnName);
+            Array array = resultSet.getArray(columnName);
             if (array == null) {
                 return null;
             }
@@ -283,7 +303,7 @@ abstract class ResultGetter {
         @Override
         @SuppressWarnings("unchecked")
         protected Object doGetValue(ResultSet resultSet) throws Exception {
-            final Array array = resultSet.getArray(columnName);
+            Array array = resultSet.getArray(columnName);
             if (array == null) {
                 return Stream.empty();
             }

@@ -16,6 +16,7 @@
  */
 package ch.kinet;
 
+import java.time.LocalDate;
 import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -175,21 +176,30 @@ public final class JsonObject extends Dict implements Json {
         }
     }
 
-    public void put(String key, Date value) {
-        if (value == null) {
-            putNull(key);
-        }
-        else {
-            imp.put(key, value.formatISO8601());
-        }
-    }
-
     public void put(String key, Time value) {
         if (value == null) {
             putNull(key);
         }
         else {
             imp.put(key, value.formatHM());
+        }
+    }
+
+    public void put(String key, LocalDate value) {
+        if (value == null) {
+            putNull(key);
+        }
+        else {
+            imp.put(key, value.toString());
+        }
+    }
+
+    public void put(String key, Date value) {
+        if (value == null) {
+            putNull(key);
+        }
+        else {
+            imp.put(key, value.formatISO8601());
         }
     }
 

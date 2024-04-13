@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2023 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,10 +20,10 @@ import ch.kinet.Binary;
 import ch.kinet.Date;
 import ch.kinet.Time;
 import ch.kinet.Timestamp;
-import ch.kinet.reflect.MetaObject;
 import ch.kinet.reflect.Property;
 import java.sql.PreparedStatement;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -33,49 +33,54 @@ abstract class ParameterSetter {
 
     protected final Property property;
 
-    static ParameterSetter createSimple(Connection connection, Property property, int index) {
-        final MetaObject<?> propertyType = property.getType();
-        if (propertyType.isClass(Binary.class)) {
-            return new BinarySetter(property, index);
-        }
-        else if (propertyType.isBoolean()) {
-            return new BooleanSetter(property, index);
-        }
-        else if (propertyType.isAssignableTo(Collection.class)) {
-            return new CollectionSetter(connection, property, index);
-        }
-        else if (propertyType.isClass(Date.class)) {
-            return new DateSetter(property, index);
-        }
-        else if (propertyType.isDouble()) {
-            return new DoubleSetter(property, index);
-        }
-        else if (propertyType.isInteger()) {
-            return new IntSetter(property, index);
-        }
-        else if (propertyType.isLong()) {
-            return new LongSetter(property, index);
-        }
-        else if (propertyType.isAssignableTo(Stream.class)) {
-            return new StreamSetter(connection, property, index);
-        }
-        else if (propertyType.isClass(String.class)) {
-            return new StringSetter(property, index);
-        }
-        else if (propertyType.isClass(Time.class)) {
-            return new TimeSetter(property, index);
-        }
-        else if (propertyType.isClass(Timestamp.class)) {
-            return new TimestampSetter(property, index);
-        }
-        else if (propertyType.isClass(UUID.class)) {
-            return new UUIDSetter(property, index);
-        }
-        throw new UnsupportedPropertyTypeException(property);
+    static ParameterSetter createLookup(Connection connection, Property property, ParameterSetter keySetter) {
+        return new SingleKeySetter(connection, property, keySetter);
     }
 
-    static ParameterSetter createSingleKey(Connection connection, Property property, ParameterSetter keySetter) {
-        return new SingleKeySetter(connection, property, keySetter);
+    static ParameterSetter createSimple(Connection connection, Property property, int index) {
+        Class<?> propertyClass = property.getPropertyClass();
+        if (propertyClass.equals(Binary.class)) {
+            return new BinarySetter(property, index);
+        }
+        else if (propertyClass.equals(Boolean.TYPE)) {
+            return new BooleanSetter(property, index);
+        }
+        else if (Collection.class.isAssignableFrom(propertyClass)) {
+            return new CollectionSetter(connection, property, index);
+        }
+        else if (propertyClass.equals(Date.class)) {
+            return new DateSetter(property, index);
+        }
+        else if (propertyClass.equals(Double.TYPE)) {
+            return new DoubleSetter(property, index);
+        }
+        else if (propertyClass.equals(Integer.TYPE)) {
+            return new IntSetter(property, index);
+        }
+        else if (propertyClass.equals(LocalDate.class)) {
+            return new LocalDateSetter(property, index);
+        }
+        else if (propertyClass.equals(Long.TYPE)) {
+            return new LongSetter(property, index);
+        }
+        else if (Stream.class.isAssignableFrom(propertyClass)) {
+            return new StreamSetter(connection, property, index);
+        }
+        else if (propertyClass.equals(String.class)) {
+            return new StringSetter(property, index);
+        }
+        else if (propertyClass.equals(Time.class)) {
+            return new TimeSetter(property, index);
+        }
+        else if (propertyClass.equals(Timestamp.class)) {
+            return new TimestampSetter(property, index);
+        }
+        else if (propertyClass.equals(UUID.class)) {
+            return new UUIDSetter(property, index);
+        }
+        else {
+            return null;
+        }
     }
 
     protected ParameterSetter(Property property) {
@@ -148,7 +153,7 @@ abstract class ParameterSetter {
 
         @Override
         protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
-            final Binary binaryValue = (Binary) value;
+            Binary binaryValue = (Binary) value;
             if (binaryValue.isNull()) {
                 doSetNull(statement);
             }
@@ -246,6 +251,23 @@ abstract class ParameterSetter {
         }
     }
 
+    private static class LocalDateSetter extends ValueSetter {
+
+        public LocalDateSetter(Property property, int index) {
+            super(property, index);
+        }
+
+        @Override
+        protected void doSetNull(PreparedStatement statement) throws Exception {
+            statement.setNull(index, Types.DATE);
+        }
+
+        @Override
+        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
+            statement.setDate(index, java.sql.Date.valueOf((LocalDate) value));
+        }
+    }
+
     private static class LongSetter extends ValueSetter {
 
         public LongSetter(Property property, int index) {
@@ -286,7 +308,7 @@ abstract class ParameterSetter {
 
     private static class StringSetter extends ValueSetter {
 
-        public StringSetter(Property property, final int index) {
+        public StringSetter(Property property, int index) {
             super(property, index);
         }
 

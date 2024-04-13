@@ -76,6 +76,10 @@ public class Property implements Comparable<Property> {
         return this.propertyInit;
     }
 
+    public Class<?> getPropertyClass() {
+        return this.type;
+    }
+
     public MetaObject<?> getType() {
         return MetaObject.forClass(this.type);
     }

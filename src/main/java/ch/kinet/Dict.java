@@ -16,6 +16,9 @@
  */
 package ch.kinet;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
 public abstract class Dict {
 
     private static final String START_DATE = "startDate";
@@ -41,10 +44,6 @@ public abstract class Dict {
         return result;
     }
 
-    public final int getInt(String key) {
-        return getInt(key, 0);
-    }
-
     public abstract double getDouble(String key, double defaultValue);
 
     public final double getDouble(String key) {
@@ -60,7 +59,24 @@ public abstract class Dict {
         return DateSpan.create(getDate(START_DATE), getDate(END_DATE));
     }
 
+    public final int getInt(String key) {
+        return getInt(key, 0);
+    }
+
     public abstract int getInt(String key, int defaultValue);
+
+    public final LocalDate getLocalDate(String key) {
+        return getLocalDate(key, null);
+    }
+
+    public final LocalDate getLocalDate(String key, LocalDate defaultValue) {
+        try {
+            return LocalDate.parse(getString(key));
+        }
+        catch (DateTimeParseException ex) {
+            return defaultValue;
+        }
+    }
 
     public final String getString(String key) {
         return getString(key, null);

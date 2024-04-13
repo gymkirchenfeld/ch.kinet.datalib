@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -36,7 +36,7 @@ class StatementBuilder<T> {
     private int nextParameterIndex;
 
     static String sqlName(String name) {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         boolean first = true;
         for (char c : name.toCharArray()) {
             if (Character.isUpperCase(c)) {
@@ -68,17 +68,17 @@ class StatementBuilder<T> {
     }
 
     final void appendBoundParameter(String propertyName, Object value) {
-        final Property property = metaObject.property(propertyName);
-        final ParameterSetter setter = addParameter(property);
+        Property property = metaObject.property(propertyName);
+        ParameterSetter setter = addParameter(property);
         boundParameterSetters.add(new Statement.BoundParameterSetter(setter, value));
         append("?");
     }
 
     final void appendFieldName(String propertyName) {
-        final Property property = metaObject().property(propertyName);
-        final StringBuilder result = new StringBuilder();
+        Property property = metaObject().property(propertyName);
+        StringBuilder result = new StringBuilder();
         result.append(property.getName());
-        final Property keyProperty = property.getType().keyProperty();
+        Property keyProperty = property.getType().keyProperty();
         if (keyProperty != null) {
             result.append(keyProperty.getName());
         }
@@ -139,7 +139,7 @@ class StatementBuilder<T> {
     }
 
     protected final String sequenceName(String propertyName) {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         if (!Util.isEmpty(schemaName())) {
             result.append(schemaName());
             result.append(".");
@@ -154,26 +154,20 @@ class StatementBuilder<T> {
     }
 
     private ParameterSetter addParameter(Property property, String columnName) {
-        final Property key = property.getType().keyProperty();
+        ParameterSetter setter = ParameterSetter.createSimple(connection, property, nextParameterIndex);
+        if (setter != null) {
+            ++nextParameterIndex;
+            columnNames.add(columnName);
+            return setter;
+        }
+
+        Property key = property.getType().keyProperty();
         if (key == null) {
-            return addSimpleParameter(property, columnName);
+            throw new UnsupportedPropertyTypeException(property);
         }
-        else {
-            return addSingleKeyLookupParameter(property, key);
-        }
-    }
 
-    private ParameterSetter addSingleKeyLookupParameter(Property property, Property key) {
-        final String columnName = sqlName(property.getName() + key.getName());
-        final ParameterSetter keySetter = addParameter(key, columnName);
-        return ParameterSetter.createSingleKey(connection, property, keySetter);
-
-    }
-
-    private ParameterSetter addSimpleParameter(Property property, String columnName) {
-        final ParameterSetter setter = ParameterSetter.createSimple(connection, property, nextParameterIndex);
-        ++nextParameterIndex;
-        columnNames.add(columnName);
-        return setter;
+        columnName = sqlName(property.getName() + key.getName());
+        ParameterSetter keySetter = addParameter(key, columnName);
+        return ParameterSetter.createLookup(connection, property, keySetter);
     }
 }
