@@ -25,6 +25,8 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.RuleBasedCollator;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +43,7 @@ import java.util.stream.Stream;
  */
 public final class Util {
 
+    private static final DateTimeFormatter DMY_FORMAT = DateTimeFormatter.ofPattern("dd.MM.YYYY");
     private static final Map<String, String> FILE_NAME_REPLACE_MAP = createFileNameReplaceMap();
     private static final Map<String, String> NAME_REPLACE_MAP = createNameReplaceMap();
     private static final String NAME_ALLOWED_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz.-";
@@ -213,6 +216,10 @@ public final class Util {
         result.append(' ');
         result.append(CURRENCY_FORMAT.format(value));
         return result.toString();
+    }
+
+    public static String formatDMY(LocalDate date) {
+        return date == null ? null : date.format(DMY_FORMAT);
     }
 
     public static String formatPhoneInternational(String number) {
