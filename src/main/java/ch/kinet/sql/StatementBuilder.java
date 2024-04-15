@@ -29,6 +29,7 @@ class StatementBuilder<T> {
     private final List<Statement.BoundParameterSetter> boundParameterSetters;
     private final List<String> columnNames;
     private final Connection connection;
+    private final Class<T> dataClass;
     private final MetaObject<T> metaObject;
     private final Map<String, ParameterSetter> parameterSetters;
     private final String schemaName;
@@ -56,11 +57,12 @@ class StatementBuilder<T> {
         return result.toString();
     }
 
-    StatementBuilder(Connection connection, String schemaName, Class<T> targetClass) {
+    StatementBuilder(Connection connection, String schemaName, Class<T> dataclass) {
         this.boundParameterSetters = new ArrayList<>();
         this.columnNames = new ArrayList<>();
         this.connection = connection;
-        this.metaObject = MetaObject.forClass(targetClass);
+        this.dataClass = dataclass;
+        this.metaObject = MetaObject.forClass(dataclass);
         this.parameterSetters = new HashMap<>();
         this.schemaName = schemaName;
         this.sql = new StringBuilder();
@@ -78,9 +80,11 @@ class StatementBuilder<T> {
         Property property = metaObject().property(propertyName);
         StringBuilder result = new StringBuilder();
         result.append(property.getName());
-        Property keyProperty = property.getType().keyProperty();
-        if (keyProperty != null) {
-            result.append(keyProperty.getName());
+        if (connection.isLookup(property.getPropertyClass())) {
+            Property keyProperty = property.getType().keyProperty();
+            if (keyProperty != null) {
+                result.append(keyProperty.getName());
+            }
         }
 
         append(sqlName(result.toString()));
@@ -92,6 +96,10 @@ class StatementBuilder<T> {
 
     final Connection connection() {
         return connection;
+    }
+
+    final Class<T> dataClass() {
+        return dataClass;
     }
 
     final MetaObject<T> metaObject() {
@@ -154,20 +162,23 @@ class StatementBuilder<T> {
     }
 
     private ParameterSetter addParameter(Property property, String columnName) {
-        ParameterSetter setter = ParameterSetter.createSimple(connection, property, nextParameterIndex);
-        if (setter != null) {
-            ++nextParameterIndex;
-            columnNames.add(columnName);
-            return setter;
+        if (connection().isLookup(property.getPropertyClass())) {
+            Property key = property.getType().keyProperty();
+            if (key == null) {
+                throw new UnsupportedPropertyTypeException(property);
+            }
+
+            columnName = sqlName(property.getName() + key.getName());
+            ParameterSetter keySetter = addParameter(key, columnName);
+            return ParameterSetter.createLookup(connection, property, keySetter);
         }
 
-        Property key = property.getType().keyProperty();
-        if (key == null) {
+        ParameterSetter setter = ParameterSetter.createSimple(connection, property, nextParameterIndex);
+        if (setter == null) {
             throw new UnsupportedPropertyTypeException(property);
         }
-
-        columnName = sqlName(property.getName() + key.getName());
-        ParameterSetter keySetter = addParameter(key, columnName);
-        return ParameterSetter.createLookup(connection, property, keySetter);
+        ++nextParameterIndex;
+        columnNames.add(columnName);
+        return setter;
     }
 }

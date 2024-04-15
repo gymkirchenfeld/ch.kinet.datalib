@@ -44,6 +44,10 @@ public abstract class Dict {
         return result;
     }
 
+    public final int getInt(String key) {
+        return getInt(key, 0);
+    }
+
     public abstract double getDouble(String key, double defaultValue);
 
     public final double getDouble(String key) {
@@ -57,10 +61,6 @@ public abstract class Dict {
      */
     public final DateSpan getDateSpan() {
         return DateSpan.create(getDate(START_DATE), getDate(END_DATE));
-    }
-
-    public final int getInt(String key) {
-        return getInt(key, 0);
     }
 
     public abstract int getInt(String key, int defaultValue);

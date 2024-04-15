@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2023 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -58,33 +58,33 @@ public class AdUser extends LdapObject {
     };
     private int userAccountControl;
 
-    AdUser(LdapConnection connection, Name dn) throws LdapException {
+    AdUser(LdapConnection connection, Name dn) {
         super(connection, dn);
         setAsString("objectClass", "user");
     }
 
-    AdUser(LdapConnection connection, SearchResult searchResult) throws LdapException {
+    AdUser(LdapConnection connection, SearchResult searchResult) {
         super(connection, searchResult, UNICODE_PWD);
         userAccountControl = getAsInt(USER_ACCOUNT_CONTROL, 0);
     }
 
-    public String getDepartment() throws LdapException {
+    public String getDepartment() {
         return getAsString(DEPARTMENT);
     }
 
-    public String getDisplayName() throws LdapException {
+    public String getDisplayName() {
         return getAsString(DISPLAY_NAME);
     }
 
-    public String getEmailAddress() throws LdapException {
+    public String getEmailAddress() {
         return getAsString(MAIL);
     }
 
-    public String getEmployeeType() throws LdapException {
+    public String getEmployeeType() {
         return getAsString(EMPLOYEE_TYPE);
     }
 
-    public String getFirstName() throws LdapException {
+    public String getFirstName() {
         return getAsString(GIVEN_NAME);
     }
 
@@ -97,57 +97,55 @@ public class AdUser extends LdapObject {
         }
     }
 
-    public String getLastName() throws LdapException {
+    public String getLastName() {
         return getAsString(SN);
     }
 
-    public Set<String> getMemberOf() throws LdapException {
+    public Set<String> getMemberOf() {
         return getAsStrings(MEMBER_OF).collect(Collectors.toSet());
     }
 
-    public String getOrganization() throws LdapException {
+    public String getOrganization() {
         return getAsString(O);
     }
 
     /**
      * Return the content of 'personalTitle' AD field. It usually contains the personal title of a person (e.g. Mr.,
      * Mrs. or Herr, Frau)
-     *
-     * @throws LdapException
      */
-    public String getPersonalTitle() throws LdapException {
+    public String getPersonalTitle() {
         return getAsString(PERSONAL_TITLE);
     }
 
-    public Set<String> getProxyAddresses() throws LdapException {
+    public Set<String> getProxyAddresses() {
         return getAsStrings(PROXY_ADDRESSES).collect(Collectors.toSet());
     }
 
-    public String getProfilePath() throws LdapException {
+    public String getProfilePath() {
         return getAsString(PROFILE_PATH);
     }
 
-    public String getSamAccountName() throws LdapException {
+    public String getSamAccountName() {
         return getAsString(SAM_ACCOUNT_NAME);
     }
 
-    public String getTelephoneNumber() throws LdapException {
+    public String getTelephoneNumber() {
         return getAsString(TELEPHONE_NUMBER);
     }
 
-    public String getUserPrincipalName() throws LdapException {
+    public String getUserPrincipalName() {
         return getAsString(USER_PRINCIPAL_NAME);
     }
 
-    public boolean isAccountDisabled() throws LdapException {
+    public boolean isAccountDisabled() {
         return getUacFlag(ACCOUNT_DISABLED);
     }
 
-    public boolean isHiddenInAddressLists() throws LdapException {
+    public boolean isHiddenInAddressLists() {
         return getAsBoolean(MS_EXCH_HIDE_FROM_ADDRESS_LISTS, false);
     }
 
-    public void setAccountDisabled(boolean value) throws LdapException {
+    public void setAccountDisabled(boolean value) {
         setUacFlag(ACCOUNT_DISABLED, value);
     }
 
@@ -185,7 +183,7 @@ public class AdUser extends LdapObject {
         }
     }
 
-    public void setHiddenInAddressLists(boolean value) throws LdapException {
+    public void setHiddenInAddressLists(boolean value) {
         setAsBoolean(MS_EXCH_HIDE_FROM_ADDRESS_LISTS, value);
     }
 
@@ -202,7 +200,7 @@ public class AdUser extends LdapObject {
         }
     }
 
-    public void setInitialPassword(String value) throws LdapException {
+    public void setInitialPassword(String value) {
         if (!Util.isEmpty(value)) {
             setPassword(value);
             // User must change password at next login
@@ -214,8 +212,8 @@ public class AdUser extends LdapObject {
         setAsString(O, value);
     }
 
-    public void setPassword(String value) throws LdapException {
-        final String newQuotedPassword = "\"" + value + "\"";
+    public void setPassword(String value) {
+        String newQuotedPassword = "\"" + value + "\"";
         setAsEncodedBytes(UNICODE_PWD, newQuotedPassword, "UTF-16LE");
     }
 
@@ -243,7 +241,7 @@ public class AdUser extends LdapObject {
         setAsString(USER_PRINCIPAL_NAME, value);
     }
 
-    public void setUacFlag(int flag, boolean set) throws LdapException {
+    public void setUacFlag(int flag, boolean set) {
         if (set) {
             userAccountControl = userAccountControl | flag;
         }
@@ -254,7 +252,7 @@ public class AdUser extends LdapObject {
         setAsInt(USER_ACCOUNT_CONTROL, userAccountControl);
     }
 
-    private boolean getUacFlag(int flag) throws LdapException {
+    private boolean getUacFlag(int flag) {
         return (userAccountControl & flag) == flag;
     }
 }

@@ -56,10 +56,9 @@ class InsertStatement<T> extends Statement<T> {
         }
 
         doExecute();
-        final T result = metaObject.newInstance(new PropertyValueAdapter(propertyValues));
-        final Lookup<T> lookup = connection().lookupFor(metaObject);
-        if (lookup != null) {
-            lookup.add(result);
+        T result = metaObject.newInstance(new PropertyValueAdapter(propertyValues));
+        if (connection().isLookup(dataClass())) {
+            connection().lookupFor(dataClass()).add(result);
         }
 
         return result;

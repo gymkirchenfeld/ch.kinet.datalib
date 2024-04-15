@@ -16,6 +16,7 @@
  */
 package ch.kinet.ldap;
 
+import java.util.Arrays;
 import java.util.Hashtable;
 import javax.naming.AuthenticationException;
 import javax.naming.Context;
@@ -46,7 +47,7 @@ public class LdapConnection {
         }
     }
 
-    public void connect(LdapSpec spec) throws LdapException {
+    public void connect(LdapSpec spec) {
         String keystore = System.getProperty("java.home") + "/lib/security/cacerts";
         System.setProperty(TRUST_STORE, keystore);
         domainName = spec.getDomain();
@@ -63,7 +64,7 @@ public class LdapConnection {
         environment.put(Context.SECURITY_AUTHENTICATION, "simple");
         environment.put(Context.SECURITY_PRINCIPAL, principal);
 
-        String password = spec.getPassword().toString();
+        String password = Arrays.toString(spec.getPassword());
         if (password == null || password.isEmpty()) {
             throw new AuthenticationFailedException(spec);
         }
@@ -86,7 +87,7 @@ public class LdapConnection {
         return new Query(context, baseContext);
     }
 
-    public void remove(Name dn) throws LdapException {
+    public void remove(Name dn) {
         try {
             context.unbind(dn.toString());
         }
@@ -98,7 +99,7 @@ public class LdapConnection {
         }
     }
 
-    public void rename(Name dn, Name newDn) throws LdapException {
+    public void rename(Name dn, Name newDn) {
         try {
             context.rename(dn.toString(), newDn.toString());
         }
@@ -114,7 +115,7 @@ public class LdapConnection {
         return rootName;
     }
 
-    void addAttributes(Name dn, Attributes attributes) throws LdapException {
+    void addAttributes(Name dn, Attributes attributes) {
         try {
             context.modifyAttributes(dn.toString(), DirContext.ADD_ATTRIBUTE, attributes);
         }
@@ -126,7 +127,7 @@ public class LdapConnection {
         }
     }
 
-    void createSubcontext(Name dn, Attributes attributes) throws LdapException {
+    void createSubcontext(Name dn, Attributes attributes) {
         try {
             context.createSubcontext(dn.toString(), attributes);
         }
@@ -138,7 +139,7 @@ public class LdapConnection {
         }
     }
 
-    void removeAttributes(Name dn, Attributes attributes) throws LdapException {
+    void removeAttributes(Name dn, Attributes attributes) {
         try {
             context.modifyAttributes(dn.toString(), DirContext.REMOVE_ATTRIBUTE, attributes);
         }
@@ -150,7 +151,7 @@ public class LdapConnection {
         }
     }
 
-    void updateAttributes(Name dn, Attributes attributes) throws LdapException {
+    void updateAttributes(Name dn, Attributes attributes) {
         try {
             context.modifyAttributes(dn.toString(), DirContext.REPLACE_ATTRIBUTE, attributes);
         }

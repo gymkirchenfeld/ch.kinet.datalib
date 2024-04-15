@@ -62,12 +62,11 @@ class SelectStatement<T> extends Statement<T> {
         ResultSet resultSet = null;
         try {
             resultSet = statement.getResultSet();
-            Lookup<T> lookup = connection().lookupFor(metaObject);
-            if (lookup == null) {
-                return executeWithoutLookup(resultSet);
+            if (connection().isLookup(dataClass())) {
+                return executeWithLookup(resultSet, connection().lookupFor(dataClass()));
             }
             else {
-                return executeWithLookup(resultSet, lookup);
+                return executeWithoutLookup(resultSet);
             }
         }
         catch (SQLException ex) {

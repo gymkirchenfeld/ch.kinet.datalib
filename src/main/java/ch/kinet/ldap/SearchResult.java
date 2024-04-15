@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@ public class SearchResult {
     private final Attributes attributes;
     private final Name dn;
 
-    public SearchResult(javax.naming.directory.SearchResult searchResult) {
+    SearchResult(javax.naming.directory.SearchResult searchResult) {
         attributes = searchResult.getAttributes();
         dn = Name.parse(searchResult.getNameInNamespace());
     }
@@ -32,7 +32,7 @@ public class SearchResult {
         return dn;
     }
 
-    public Attributes attributes() {
+    Attributes attributes() {
         return attributes;
     }
 }

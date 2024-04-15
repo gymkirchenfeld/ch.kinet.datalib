@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2023 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,13 +17,13 @@
 package ch.kinet.ad;
 
 import ch.kinet.ldap.LdapConnection;
-import ch.kinet.ldap.LdapException;
 import ch.kinet.ldap.LdapObject;
 import ch.kinet.ldap.Name;
 import ch.kinet.ldap.SearchResult;
 import java.util.Collection;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class AdGroup extends LdapObject {
@@ -43,22 +43,20 @@ public final class AdGroup extends LdapObject {
     public static final String[] ATTRIBUTES = {
         ADMIN_DESCRIPTION, AUTH_ORIG, DESCRIPTION, MAIL, MEMBER, MS_EXCH_REQUIRE_AUTH_TO_SEND_TO, SAM_ACCOUNT_NAME
     };
-    private final SortedSet<String> members;
+    private final Set<String> members;
 
-    AdGroup(LdapConnection connection, Name dn) throws LdapException {
+    AdGroup(LdapConnection connection, Name dn) {
         super(connection, dn);
         members = new TreeSet<>();
         setAsString(OBJECT_CLASS, GROUP);
         setAsInt(GROUP_TYPE, ACCOUNT_GROUP + SECURITY_GROUP);
     }
 
-    AdGroup(LdapConnection connection, SearchResult searchResult, SearchResult[] members)
-        throws LdapException {
+    AdGroup(LdapConnection connection, SearchResult searchResult, Stream<SearchResult> members) {
         super(connection, searchResult);
-        this.members = new TreeSet<>();
-        for (int i = 0; i < members.length; ++i) {
-            this.members.add(members[i].dn().toString());
-        }
+        this.members = members
+            .map(item -> item.dn().toString())
+            .collect(Collectors.toSet());
     }
 
     public void add(AdUser user) {
@@ -71,23 +69,23 @@ public final class AdGroup extends LdapObject {
         return members.contains(user.dn().toString());
     }
 
-    public Stream<String> getAuthOrig() throws LdapException {
+    public Stream<String> getAuthOrig() {
         return getAsStrings(AUTH_ORIG);
     }
 
-    public String getDescription() throws LdapException {
+    public String getDescription() {
         return getAsString(DESCRIPTION);
     }
 
-    public int getId() throws LdapException {
+    public int getId() {
         return getAsInt(ADMIN_DESCRIPTION, -1);
     }
 
-    public String getMail() throws LdapException {
+    public String getMail() {
         return getAsString(MAIL);
     }
 
-    public String getSamAccountName() throws LdapException {
+    public String getSamAccountName() {
         return getAsString(SAM_ACCOUNT_NAME);
     }
 
@@ -95,7 +93,7 @@ public final class AdGroup extends LdapObject {
         return members.isEmpty();
     }
 
-    public boolean isInternal() throws LdapException {
+    public boolean isInternal() {
         return getAsBoolean(MS_EXCH_REQUIRE_AUTH_TO_SEND_TO, false);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -24,12 +24,14 @@ import java.util.Map;
 class Statement<T> {
 
     private final Connection connection;
+    private final Class<T> dataClass;
     private final Map<String, ParameterSetter> parameterSetters;
     private final String sql;
     final PreparedStatement statement;
 
     protected Statement(StatementBuilder<T> builder) {
         this.connection = builder.connection();
+        this.dataClass = builder.dataClass();
         this.parameterSetters = builder.parameterSetters();
         this.sql = builder.sql();
         this.statement = connection.prepareStatement(this.sql);
@@ -65,6 +67,10 @@ class Statement<T> {
 
     protected final Connection connection() {
         return connection;
+    }
+
+    protected final Class<T> dataClass() {
+        return dataClass;
     }
 
     protected void doExecute() {

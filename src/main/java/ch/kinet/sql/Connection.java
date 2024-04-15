@@ -35,19 +35,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Connection {
+public final class Connection {
 
     private static final String NOW_SELECT_SQL =
         "select now()";
-    private static final String ROLES_SELECT_SQL =
-        "select role_name as RoleName from information_schema.enabled_roles";
     private static final String SEQUENCE_SELECT_SQL =
         "select nextval(?)";
-    private final Map<MetaObject<?>, Lookup<?>> lookupMap;
+    private final Map<Class<?>, Lookup<?>> lookupMap;
     private final Object sequenceSelectStatementLock;
     private java.sql.Connection connection;
     private PreparedStatement nowStatement;
-    private PreparedStatement rolesSelectStatement;
     private PreparedStatement sequenceSelectStatement;
     private String user;
 
@@ -56,19 +53,19 @@ public class Connection {
         sequenceSelectStatementLock = new Object();
     }
 
-    public final void addLookup(Class<?> targetClass) {
-        final MetaObject<?> metaObject = MetaObject.forClass(targetClass);
-        if (!lookupMap.containsKey(metaObject)) {
-            final Property keyProperty = metaObject.keyProperty();
+    public void addLookup(Class<?> targetClass) {
+        MetaObject<?> metaObject = MetaObject.forClass(targetClass);
+        if (!lookupMap.containsKey(targetClass)) {
+            Property keyProperty = metaObject.keyProperty();
             if (keyProperty == null) {
                 throw new NoKeyPropertyException(targetClass);
             }
 
-            lookupMap.put(metaObject, new Lookup(keyProperty));
+            lookupMap.put(targetClass, new Lookup(keyProperty));
         }
     }
 
-    public final void close() {
+    public void close() {
         if (connection == null) {
             return;
         }
@@ -83,23 +80,22 @@ public class Connection {
         }
     }
 
-    public final void connect(DbSpec spec) {
+    public void connect(DbSpec spec) {
         user = spec.getUserName();
         connection = Connector.connect(spec);
         nowStatement = prepareStatement(NOW_SELECT_SQL);
-        rolesSelectStatement = prepareStatement(ROLES_SELECT_SQL);
         sequenceSelectStatement = prepareStatement(SEQUENCE_SELECT_SQL);
         connected();
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> void delete(String schemaName, T object) {
+    public <T> void delete(String schemaName, T object) {
         if (object == null) {
             throw new NullPointerException("object");
         }
 
-        final MetaObject<T> metaObject = MetaObject.forClass((Class<T>) object.getClass());
-        final List<Condition> where = new ArrayList<>();
+        MetaObject<T> metaObject = MetaObject.forClass((Class<T>) object.getClass());
+        List<Condition> where = new ArrayList<>();
         for (Property property : metaObject.keyProperties()) {
             where.add(Condition.equals(property.getName(), property.getValue(object)));
         }
@@ -107,7 +103,7 @@ public class Connection {
         delete(schemaName, (Class<T>) object.getClass(), Condition.and(where));
     }
 
-    public final <T> void delete(String schemaName, Class<T> targetClass, Condition where) {
+    public <T> void delete(String schemaName, Class<T> targetClass, Condition where) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
@@ -115,7 +111,7 @@ public class Connection {
         DeleteStatement.execute(this, schemaName, targetClass, where);
     }
 
-    public final <T> void deleteAll(String schemaName, Class<T> targetClass) {
+    public <T> void deleteAll(String schemaName, Class<T> targetClass) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
@@ -123,27 +119,11 @@ public class Connection {
         DeleteStatement.execute(this, schemaName, targetClass, null);
     }
 
-    public final List<String> enabledRoles() {
-        try {
-            rolesSelectStatement.execute();
-            List<String> result = new ArrayList<>();
-            ResultSet resultSet = rolesSelectStatement.getResultSet();
-            while (resultSet.next()) {
-                result.add(resultSet.getString("RoleName"));
-            }
-
-            return result;
-        }
-        catch (SQLException ex) {
-            throw new QueryRolesException(ex);
-        }
-    }
-
-    public final String getUser() {
+    public String getUser() {
         return user;
     }
 
-    public final <T> T insert(String schemaName, Class<T> targetClass, Map<String, Object> propertyValues) {
+    public <T> T insert(String schemaName, Class<T> targetClass, Map<String, Object> propertyValues) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
@@ -155,7 +135,7 @@ public class Connection {
         return InsertStatement.create(this, schemaName, targetClass).execute(propertyValues);
     }
 
-    public final int nextId(String sequenceName) {
+    public int nextId(String sequenceName) {
         try {
             synchronized (sequenceSelectStatementLock) {
                 sequenceSelectStatement.setString(1, sequenceName);
@@ -170,8 +150,8 @@ public class Connection {
         }
     }
 
-    public final <T> T lookup(Class<T> targetClass, Object key) {
-        final Lookup<T> lookup = lookupFor(MetaObject.forClass(targetClass));
+    public <T> T lookup(Class<T> targetClass, Object key) {
+        Lookup<T> lookup = lookupFor(targetClass);
         if (lookup == null) {
             return null;
         }
@@ -180,7 +160,7 @@ public class Connection {
         }
     }
 
-    public final Timestamp now() {
+    public Timestamp now() {
         try {
             nowStatement.execute();
             final ResultSet resultSet = nowStatement.getResultSet();
@@ -192,7 +172,7 @@ public class Connection {
         }
     }
 
-    public final <T> Stream<T> select(String schemaName, Class<T> targetClass, Condition where) {
+    public <T> Stream<T> select(String schemaName, Class<T> targetClass, Condition where) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
@@ -200,7 +180,7 @@ public class Connection {
         return SelectStatement.execute(this, schemaName, targetClass, where).stream();
     }
 
-    public final <T> Stream<T> selectAll(String schemaName, Class<T> targetClass) {
+    public <T> Stream<T> selectAll(String schemaName, Class<T> targetClass) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
@@ -208,7 +188,7 @@ public class Connection {
         return select(schemaName, targetClass, null);
     }
 
-    public final <T> T selectOne(String schemaName, Class<T> targetClass, Condition where) {
+    public <T> T selectOne(String schemaName, Class<T> targetClass, Condition where) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
@@ -222,7 +202,7 @@ public class Connection {
         }
     }
 
-    public final <T> T tryInsert(String schemaName, Class<T> targetClass, Map<String, Object> propertyValues) {
+    public <T> T tryInsert(String schemaName, Class<T> targetClass, Map<String, Object> propertyValues) {
         if (targetClass == null) {
             throw new NullPointerException("targetClass");
         }
@@ -240,7 +220,7 @@ public class Connection {
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> void update(String schemaName, T object) {
+    public <T> void update(String schemaName, T object) {
         if (object == null) {
             throw new NullPointerException("object");
         }
@@ -248,12 +228,12 @@ public class Connection {
         UpdateStatement.create(this, schemaName, (Class<T>) object.getClass(), null).execute(object);
     }
 
-    public final <T> void update(String schemaName, T object, String... propertyNames) {
+    public <T> void update(String schemaName, T object, String... propertyNames) {
         update(schemaName, object, new HashSet<>(Arrays.asList(propertyNames)));
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> void update(String schemaName, T object, Set<String> propertyNames) {
+    public <T> void update(String schemaName, T object, Set<String> propertyNames) {
         if (object == null) {
             throw new NullPointerException("object");
         }
@@ -265,8 +245,8 @@ public class Connection {
         UpdateStatement.<T>create(this, schemaName, (Class<T>) object.getClass(), propertyNames).execute(object);
     }
 
-    public final <T> void update(String schemaName, Class<T> targetClass,
-                                 Map<String, Object> properties, Condition where) {
+    public <T> void update(String schemaName, Class<T> targetClass,
+                           Map<String, Object> properties, Condition where) {
         UpdateMultiStatement.<T>create(this, schemaName, targetClass, properties.keySet(), where).execute(properties);
     }
 
@@ -276,12 +256,16 @@ public class Connection {
     protected void connected() {
     }
 
-    @SuppressWarnings("unchecked")
-    <T> Lookup<T> lookupFor(MetaObject<T> metaObject) {
-        return (Lookup<T>) lookupMap.get(metaObject);
+    <T> boolean isLookup(Class<T> targetClass) {
+        return lookupMap.containsKey(targetClass);
     }
 
-    final java.sql.PreparedStatement prepareStatement(String sql) {
+    @SuppressWarnings("unchecked")
+    <T> Lookup<T> lookupFor(Class<T> targetClass) {
+        return (Lookup<T>) lookupMap.get(targetClass);
+    }
+
+    java.sql.PreparedStatement prepareStatement(String sql) {
         try {
             return connection.prepareStatement(sql);
         }
@@ -290,7 +274,7 @@ public class Connection {
         }
     }
 
-    final Array createArrayOf(Collection collection) {
+    Array createArrayOf(Collection collection) {
         if (collection.isEmpty()) {
             return null;
         }

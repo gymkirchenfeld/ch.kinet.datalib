@@ -176,12 +176,12 @@ public final class JsonObject extends Dict implements Json {
         }
     }
 
-    public void put(String key, Time value) {
+    public void put(String key, Date value) {
         if (value == null) {
             putNull(key);
         }
         else {
-            imp.put(key, value.formatHM());
+            imp.put(key, value.formatISO8601());
         }
     }
 
@@ -194,12 +194,12 @@ public final class JsonObject extends Dict implements Json {
         }
     }
 
-    public void put(String key, Date value) {
+    public void put(String key, Time value) {
         if (value == null) {
             putNull(key);
         }
         else {
-            imp.put(key, value.formatISO8601());
+            imp.put(key, value.formatHM());
         }
     }
 

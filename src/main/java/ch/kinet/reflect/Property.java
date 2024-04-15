@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2012 by Stefan Rothe
+ * Copyright (C) 2011 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -72,12 +72,12 @@ public class Property implements Comparable<Property> {
         return this.name;
     }
 
-    public PropertyInit getPropertyInit() {
-        return this.propertyInit;
-    }
-
     public Class<?> getPropertyClass() {
         return this.type;
+    }
+
+    public PropertyInit getPropertyInit() {
+        return this.propertyInit;
     }
 
     public MetaObject<?> getType() {

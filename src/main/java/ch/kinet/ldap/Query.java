@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.Stream.Builder;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
@@ -36,22 +38,26 @@ public class Query {
     private final Name name;
     private String filter;
 
-    static Query create(LdapContext context, Name name) {
-        return new Query(context, name);
+    Query(LdapContext context, Name name) {
+        this.attributes = new ArrayList<>();
+        this.context = context;
+        this.filter = null;
+        this.name = name;
     }
 
-    public SearchResult[] execute() throws QueryException {
-        final List<SearchResult> result = new ArrayList<>();
+    public Stream<SearchResult> execute() throws QueryException {
+        Builder<SearchResult> result = Stream.builder();
         try {
             byte[] cookie = null;
             SearchControls sc = new SearchControls();
             sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            sc.setReturningAttributes(attributes.toArray(new String[attributes.size()]));
+            String[] attrs = attributes.toArray(String[]::new);
+            sc.setReturningAttributes(attrs);
 
             Control control = new PagedResultsControl(SEARCH_PAGE_SIZE, Control.CRITICAL);
             context.setRequestControls(new Control[]{control});
             do {
-                NamingEnumeration results = context.search(this.name.toString(), this.filter, sc);
+                NamingEnumeration results = context.search(name.toString(), filter, sc);
                 while (results != null && results.hasMoreElements()) {
                     result.add(new SearchResult((javax.naming.directory.SearchResult) results.next()));
                 }
@@ -71,21 +77,14 @@ public class Query {
             }
             while (cookie != null);
         }
-        catch (final NamingException ex) {
+        catch (NamingException ex) {
             throw new QueryException(this, ex);
         }
-        catch (final IOException ex) {
+        catch (IOException ex) {
             throw new QueryException(this, ex);
         }
 
-        return result.toArray(new SearchResult[result.size()]);
-    }
-
-    public Query(LdapContext context, Name name) {
-        attributes = new ArrayList<>();
-        this.context = context;
-        this.filter = null;
-        this.name = name;
+        return result.build();
     }
 
     public void addAttributes(String... values) {
@@ -98,7 +97,7 @@ public class Query {
 
     @Override
     public String toString() {
-        final StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         result.append("Query(name='");
         result.append(name);
         result.append("', filter='");

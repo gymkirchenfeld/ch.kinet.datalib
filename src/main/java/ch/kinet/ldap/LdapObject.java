@@ -48,7 +48,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
     private final Attributes update;
     private boolean isNew;
 
-    protected LdapObject(LdapConnection connection, Name dn) throws LdapException {
+    protected LdapObject(LdapConnection connection, Name dn) {
         this.add = new BasicAttributes();
         this.connection = connection;
         this.dn = dn;
@@ -60,7 +60,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
     }
 
     protected LdapObject(LdapConnection connection, SearchResult searchResult,
-                         String... existingAttributes) throws LdapException {
+                         String... existingAttributes) {
         this.add = new BasicAttributes();
         this.connection = connection;
         this.dn = searchResult.dn();
@@ -93,7 +93,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
         return isNew;
     }
 
-    public final void save() throws LdapException {
+    public final void save() {
         if (!isModified()) {
             return;
         }
@@ -109,7 +109,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
         }
     }
 
-    public boolean getAsBoolean(String name, boolean defaultValue) throws LdapException {
+    public boolean getAsBoolean(String name, boolean defaultValue) {
         try {
             String value = getAsString(name);
             if (value == null) {
@@ -130,7 +130,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
         }
     }
 
-    public int getAsInt(String name, int defaultValue) throws LdapException {
+    public int getAsInt(String name, int defaultValue) {
         try {
             return Integer.parseInt(getAsString(name));
         }
@@ -139,7 +139,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
         }
     }
 
-    public String getAsString(String name) throws LdapException {
+    public String getAsString(String name) {
         try {
             Attribute attr = original.get(name);
             if (attr == null) {
@@ -154,7 +154,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
         }
     }
 
-    public Stream<String> getAsStrings(String name) throws LdapException {
+    public Stream<String> getAsStrings(String name) {
         List<String> result = new ArrayList<>();
         try {
             Attribute attr = original.get(name);
@@ -175,7 +175,7 @@ public abstract class LdapObject implements Comparable<LdapObject> {
         setAsString(name, value ? "TRUE" : "FALSE");
     }
 
-    public void setAsEncodedBytes(String name, String value, String charsetName) throws LdapException {
+    public void setAsEncodedBytes(String name, String value, String charsetName) {
         if (Util.isEmpty(value)) {
             clearAttribute(name);
         }

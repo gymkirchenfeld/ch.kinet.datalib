@@ -40,14 +40,16 @@ abstract class ResultGetter {
     }
 
     static ResultGetter create(Connection connection, Property property, String columnName) {
-        ResultGetter result = createSimple(property, columnName);
-        if (result == null) {
+        if (connection.isLookup(property.getPropertyClass())) {
             Property key = property.getType().keyProperty();
-            if (key != null) {
-                result = new LookupGetter(connection, property, key);
+            if (key == null) {
+                throw new UnsupportedPropertyTypeException(property);
             }
+
+            return new LookupGetter(connection, property, key);
         }
 
+        ResultGetter result = createSimple(property, columnName);
         if (result == null) {
             throw new UnsupportedPropertyTypeException(property);
         }
@@ -139,7 +141,7 @@ abstract class ResultGetter {
         public LookupGetter(Connection connection, Property property, Property key) {
             super(property);
             String columnName = StatementBuilder.sqlName(property.getName() + key.getName());
-            this.lookup = connection.lookupFor(property.getType());
+            this.lookup = connection.lookupFor(property.getPropertyClass());
             if (this.lookup == null) {
                 throw new MissingLookupException(property.getType());
             }

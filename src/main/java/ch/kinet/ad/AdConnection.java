@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -18,12 +18,12 @@ package ch.kinet.ad;
 
 import ch.kinet.Util;
 import ch.kinet.ldap.LdapConnection;
-import ch.kinet.ldap.LdapException;
 import ch.kinet.ldap.Name;
 import ch.kinet.ldap.Query;
 import ch.kinet.ldap.SearchResult;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.Stream.Builder;
 
 public final class AdConnection extends LdapConnection {
 
@@ -38,56 +38,40 @@ public final class AdConnection extends LdapConnection {
     private AdConnection() {
     }
 
-    public AdUser findUser(Name context, String accountName) throws LdapException {
-        final Query query = createQuery(context);
+    public AdUser findUser(Name context, String accountName) {
+        Query query = createQuery(context);
         query.setFilter("(&(" + USER_FILTER + ")(samAccountName=" + accountName + "))");
         query.addAttributes(AdUser.ATTRIBUTES);
-        final SearchResult[] searchResults = query.execute();
-        if (searchResults.length == 1) {
-            return new AdUser(this, searchResults[0]);
-        }
-        else {
-            return null;
-        }
+        List<SearchResult> searchResults = query.execute().collect(Collectors.toList());
+        return searchResults.size() == 1 ? new AdUser(this, searchResults.get(0)) : null;
     }
 
-    public AdGroup createGroup(Name dn) throws LdapException {
+    public AdGroup createGroup(Name dn) {
         return new AdGroup(this, dn);
     }
 
-    public AdUser createUser(Name dn) throws LdapException {
+    public AdUser createUser(Name dn) {
         return new AdUser(this, dn);
     }
 
-    public AdGroup[] loadGroups(Name context) throws LdapException {
-        final Query query = createQuery(context);
+    public Stream<AdGroup> loadGroups(Name context) {
+        Query query = createQuery(context);
         query.setFilter(GROUP_FILTER);
         query.addAttributes(AdGroup.ATTRIBUTES);
-        final SearchResult[] searchResults = query.execute();
-        final AdGroup[] result = new AdGroup[searchResults.length];
-        for (int i = 0; i < searchResults.length; ++i) {
+        return query.execute().map(item -> {
             // Workaround: AD does not reliably deliver all members in the member attribute of a group. If the
             // group has more than 1500 members, none are returned.
             // As a workaround, we execute a query returning all members of a group for every group.
-            final Query memberQuery = createQuery(rootName());
-            memberQuery.setFilter(Util.args(MEMBER_FILTER, searchResults[i].dn()));
-            final SearchResult[] members = memberQuery.execute();
-            result[i] = new AdGroup(this, searchResults[i], members);
-        }
-
-        return result;
+            Query memberQuery = createQuery(rootName());
+            memberQuery.setFilter(Util.args(MEMBER_FILTER, item.dn()));
+            return new AdGroup(this, item, memberQuery.execute());
+        });
     }
 
-    public Stream<AdUser> loadUsers(Name context) throws LdapException {
-        Builder<AdUser> result = Stream.builder();
-        final Query query = createQuery(context);
+    public Stream<AdUser> loadUsers(Name context) {
+        Query query = createQuery(context);
         query.setFilter(USER_FILTER);
         query.addAttributes(AdUser.ATTRIBUTES);
-        final SearchResult[] searchResults = query.execute();
-        for (int i = 0; i < searchResults.length; ++i) {
-            result.add(new AdUser(this, searchResults[i]));
-        }
-
-        return result.build();
+        return query.execute().map(item -> new AdUser(this, item));
     }
 }
