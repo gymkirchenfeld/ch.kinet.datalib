@@ -45,7 +45,7 @@ public class Response {
 
     public static Response createdJsonTerse(Json object) {
         if (object == null) {
-            return internalServerError();
+            throw new IllegalArgumentException("Parameter 'object' is null.");
         }
 
         JsonObject root = JsonObject.create();
@@ -55,7 +55,7 @@ public class Response {
 
     public static Response createdJsonVerbose(Json object) {
         if (object == null) {
-            return internalServerError();
+            throw new IllegalArgumentException("Parameter 'object' is null.");
         }
 
         JsonObject root = JsonObject.create();
