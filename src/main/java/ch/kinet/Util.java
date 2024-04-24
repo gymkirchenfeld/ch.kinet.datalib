@@ -44,6 +44,8 @@ import java.util.stream.Stream;
 public final class Util {
 
     private static final DateTimeFormatter DMY_FORMAT = DateTimeFormatter.ofPattern("dd.MM.YYYY");
+    private static final DateTimeFormatter SHORT_FORMAT = DateTimeFormatter.ofPattern("EE dd.MM.YYYY");
+    private static final DateTimeFormatter TEXT_FORMAT = DateTimeFormatter.ofPattern("d. MMMM yyyy");
     private static final Map<String, String> FILE_NAME_REPLACE_MAP = createFileNameReplaceMap();
     private static final Map<String, String> NAME_REPLACE_MAP = createNameReplaceMap();
     private static final String NAME_ALLOWED_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz.-";
@@ -218,8 +220,16 @@ public final class Util {
         return result.toString();
     }
 
-    public static String formatDMY(LocalDate date) {
+    public static String formatDateDMY(LocalDate date) {
         return date == null ? null : date.format(DMY_FORMAT);
+    }
+
+    public static String formatDateShort(LocalDate date) {
+        return date == null ? null : date.format(SHORT_FORMAT);
+    }
+
+    public static String formatDateText(LocalDate date) {
+        return date == null ? null : date.format(TEXT_FORMAT);
     }
 
     public static String formatPhoneInternational(String number) {
