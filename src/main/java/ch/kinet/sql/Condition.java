@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,7 +17,7 @@
 package ch.kinet.sql;
 
 import java.util.Collection;
-import ch.kinet.DateSpanI;
+import ch.kinet.DateInterval;
 
 public abstract class Condition {
 
@@ -33,7 +33,7 @@ public abstract class Condition {
         return new Between(parameterName, lowerBound, upperBound);
     }
 
-    public static Condition during(String parameterName, DateSpanI duration) {
+    public static Condition during(String parameterName, DateInterval duration) {
         if (duration.getEndDate() == null) {
             return greaterOrEqual(parameterName, duration.getStartDate());
         }

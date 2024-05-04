@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 by Stefan Rothe
+ * Copyright (C) 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,62 +17,63 @@
 package ch.kinet;
 
 import ch.kinet.reflect.Persistence;
+import java.time.LocalDate;
 
-public class DateSpanEntity extends Entity implements DateSpanI {
+public class DateSpanEntity extends Entity implements DateInterval {
 
     public static final String DB_END_DATE = "EndDate";
     public static final String DB_START_DATE = "StartDate";
     public static final String JSON_END_DATE = "endDate";
     public static final String JSON_START_DATE = "startDate";
-    private final DateSpan dateSpan = DateSpan.create();
+    private DateSpan dateSpan = DateSpan.create();
 
     protected DateSpanEntity(int id) {
         super(id);
     }
 
-    @Override
-    public final boolean contains(Date date) {
-        return dateSpan.contains(date);
+    public final boolean contains(LocalDate date) {
+        return toDateSpan().contains(date);
     }
 
-    @Override
     public String durationText() {
-        return dateSpan.durationText();
+        return toDateSpan().durationText();
     }
 
     @Override
-    public final Date getEndDate() {
+    public final LocalDate getEndDate() {
         return dateSpan.getEndDate();
     }
 
     @Override
-    public final Date getStartDate() {
+    public final LocalDate getStartDate() {
         return dateSpan.getStartDate();
     }
 
-    @Override
     @Persistence(ignore = true)
-    public boolean isOpen() {
-        return dateSpan.isOpen();
+    public final boolean isCurrent() {
+        return dateSpan.isCurrent();
     }
 
     @Override
     @Persistence(ignore = true)
-    public boolean isValid() {
+    public final boolean isValid() {
         return dateSpan.isValid();
     }
 
-    @Override
-    public final boolean overlapsWith(DateSpanI other) {
+    public final boolean overlapsWith(DateInterval other) {
         return dateSpan.overlapsWith(other);
     }
 
-    public final void setEndDate(Date endDate) {
-        dateSpan.setEndDate(endDate);
+    public final void setEndDate(LocalDate endDate) {
+        dateSpan = dateSpan.withEndDate(endDate);
     }
 
-    public final void setStartDate(Date startDate) {
-        dateSpan.setStartDate(startDate);
+    public final void setStartDate(LocalDate startDate) {
+        dateSpan = dateSpan.withStartDate(startDate);
+    }
+
+    public final DateSpan toDateSpan() {
+        return dateSpan;
     }
 
     @Override

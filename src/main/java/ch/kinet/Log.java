@@ -16,6 +16,7 @@
  */
 package ch.kinet;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -173,13 +174,13 @@ public final class Log {
         private final int id;
         private final int level;
         private final String message;
-        private final Timestamp timestamp;
+        private final LocalDateTime timestamp;
 
         Entry(int id, int level, String message) {
             this.id = id;
             this.level = level;
             this.message = message;
-            this.timestamp = Timestamp.now();
+            this.timestamp = LocalDateTime.now();
         }
 
         @Override
@@ -259,7 +260,7 @@ public final class Log {
         @Override
         public String toString() {
             StringBuilder result = new StringBuilder();
-            result.append(timestamp.formatTimestamp());
+            result.append(Date.formatTimestamp(timestamp));
             result.append(": ");
             result.append(getLevelText());
             result.append(": ");
@@ -271,8 +272,8 @@ public final class Log {
         public JsonObject toJsonTerse() {
             JsonObject result = JsonObject.create();
             result.put("id", id);
-            result.put("date", timestamp.getDate());
-            result.put("time", timestamp.getTime());
+            result.put("date", timestamp.toLocalDate());
+            result.put("time", timestamp.toLocalTime());
             result.put("level", getLevelText());
             result.put("message", message);
             return result;

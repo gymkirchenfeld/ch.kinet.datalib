@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 - 2024 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2024 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,58 +16,52 @@
  */
 package ch.kinet;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.Objects;
 
-public final class DateSpan implements DateSpanI {
+public final class DateSpan implements DateInterval {
 
-    private Date startDate;
-    private Date endDate;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
 
     public static DateSpan create() {
         return new DateSpan(null, null);
     }
 
-    public static DateSpan create(Date date) {
+    public static DateSpan of(LocalDate date) {
         return new DateSpan(date, date);
     }
 
-    public static DateSpan create(Date startDate, Date endDate) {
+    public static DateSpan of(LocalDate startDate, LocalDate endDate) {
         return new DateSpan(startDate, endDate);
     }
 
-    public static DateSpan workWeek(Date date) {
-        Date monday = date;
-        while (monday.getDayOfWeek() != Date.DayOfWeek.Monday) {
-            monday = monday.addDays(-1);
+    public static DateSpan workWeek(LocalDate date) {
+        LocalDate monday = date;
+        while (monday.getDayOfWeek() != DayOfWeek.MONDAY) {
+            monday = monday.minusDays(1);
         }
 
-        return create(monday, monday.addDays(5));
+        return of(monday, monday.plusDays(5));
     }
 
-    private DateSpan(Date startDay, Date endDay) {
+    private DateSpan(LocalDate startDay, LocalDate endDay) {
         this.startDate = startDay;
         this.endDate = endDay;
     }
 
-    public boolean after(Date date) {
-        return startDate != null && date != null && startDate.after(date);
+    public boolean contains(LocalDate date) {
+        return date != null &&
+            (startDate == null || !date.isBefore(startDate)) &&
+            (endDate == null || !date.isAfter(endDate));
     }
 
-    public boolean before(Date date) {
-        return endDate != null && date != null && endDate.before(date);
-    }
-
-    @Override
-    public boolean contains(Date day) {
-        return day != null && day.between(startDate, endDate);
-    }
-
-    @Override
     public String durationText() {
         StringBuilder result = new StringBuilder();
-        result.append(getStartDateText());
+        result.append(Date.formatDMY(startDate));
         result.append(" – ");
-        result.append(getEndDateText());
+        result.append(Date.formatDMY(endDate));
         return result.toString();
     }
 
@@ -83,12 +77,12 @@ public final class DateSpan implements DateSpanI {
     }
 
     @Override
-    public Date getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 
     @Override
-    public Date getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
@@ -100,46 +94,28 @@ public final class DateSpan implements DateSpanI {
         return hash;
     }
 
-    @Override
-    public boolean isOpen() {
-        return startDate == null || endDate == null;
+    public boolean isCurrent() {
+        return contains(LocalDate.now());
     }
 
     @Override
     public boolean isValid() {
-        return isOpen() || !startDate.after(endDate);
+        return startDate != null && endDate != null && !startDate.isAfter(endDate);
     }
 
-    @Override
-    public boolean overlapsWith(DateSpanI other) {
-        if (other == null) {
+    public boolean overlapsWith(DateInterval other) {
+        if (other == null || !isValid()) {
             return false;
         }
 
-        return !(after(other.getEndDate()) || before(other.getStartDate()));
+        return !(startDate.isAfter(other.getEndDate()) || endDate.isBefore(other.getStartDate()));
     }
 
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
+    public DateSpan withEndDate(LocalDate endDate) {
+        return of(startDate, endDate);
     }
 
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
-    }
-
-    private String getEndDateText() {
-        if (endDate == null) {
-            return null;
-        }
-
-        return endDate.formatDMY();
-    }
-
-    private String getStartDateText() {
-        if (startDate == null) {
-            return null;
-        }
-
-        return startDate.formatDMY();
+    public DateSpan withStartDate(LocalDate startDate) {
+        return of(startDate, endDate);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2023 - 2024 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,7 +17,7 @@
 package ch.kinet.http;
 
 import ch.kinet.Data;
-import ch.kinet.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,7 +48,7 @@ public final class FileStorage {
     public String addTemporaryFile(Data file) {
         synchronized (lock) {
             String key = UUID.randomUUID().toString();
-            FileInfo fileInfo = new FileInfo(file, Timestamp.now().addMinutes(1));
+            FileInfo fileInfo = new FileInfo(file, LocalDateTime.now().plusMinutes(1));
             storage.put(key, fileInfo);
             return key;
         }
@@ -57,10 +57,10 @@ public final class FileStorage {
     public void collectGarbage() {
         synchronized (lock) {
             Set<String> removable = new HashSet<>();
-            Timestamp now = Timestamp.now();
+            LocalDateTime now = LocalDateTime.now();
             removable.clear();
             storage.keySet().forEach(key -> {
-                if (now.after(storage.get(key).deleteAfter)) {
+                if (now.isAfter(storage.get(key).deleteAfter)) {
                     removable.add(key);
                 }
             });
@@ -74,9 +74,9 @@ public final class FileStorage {
     private static final class FileInfo {
 
         private final Data file;
-        private final Timestamp deleteAfter;
+        private final LocalDateTime deleteAfter;
 
-        FileInfo(Data file, Timestamp deleteAfter) {
+        FileInfo(Data file, LocalDateTime deleteAfter) {
             this.file = file;
             this.deleteAfter = deleteAfter;
         }

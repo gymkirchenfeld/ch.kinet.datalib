@@ -17,6 +17,8 @@
 package ch.kinet;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -120,7 +122,7 @@ public final class JsonObject extends Dict implements Json {
     public int getObjectId(String key, int defaultValue) {
         JsonObject obj = getObject(key);
         if (obj == null) {
-            return defaultValue;
+            return getInt(key, defaultValue);
         }
 
         return obj.getInt(Entity.JSON_ID, defaultValue);
@@ -176,15 +178,6 @@ public final class JsonObject extends Dict implements Json {
         }
     }
 
-    public void put(String key, Date value) {
-        if (value == null) {
-            putNull(key);
-        }
-        else {
-            imp.put(key, value.formatISO8601());
-        }
-    }
-
     public void put(String key, LocalDate value) {
         if (value == null) {
             putNull(key);
@@ -194,34 +187,38 @@ public final class JsonObject extends Dict implements Json {
         }
     }
 
-    public void put(String key, Time value) {
+    public void put(String key, LocalTime value) {
         if (value == null) {
             putNull(key);
         }
         else {
-            imp.put(key, value.formatHM());
+            imp.put(key, value.toString());
         }
     }
 
-    public void put(Timestamp value) {
+    public void put(LocalDateTime value) {
         if (value == null) {
             putNull("date");
             putNull("time");
         }
         else {
-            put("date", value.getDate());
-            put("time", value.getTime());
+            put("date", value.toLocalDate());
+            put("time", value.toLocalTime());
         }
     }
 
-    public void put(String keyPrefix, Timestamp value) {
+    public void put(String keyPrefix, LocalDateTime value) {
+        if (Util.isEmpty(keyPrefix)) {
+            put(value);
+            return;
+        }
         if (value == null) {
             putNull(keyPrefix + "Date");
             putNull(keyPrefix + "Time");
         }
         else {
-            put(keyPrefix + "Date", value.getDate());
-            put(keyPrefix + "Time", value.getTime());
+            put(keyPrefix + "Date", value.toLocalDate());
+            put(keyPrefix + "Time", value.toLocalTime());
         }
     }
 
@@ -255,6 +252,11 @@ public final class JsonObject extends Dict implements Json {
     public void putVerbose(String key, Json value) {
         JsonObject object = value == null ? null : value.toJsonVerbose();
         put(key, object);
+    }
+
+    @Deprecated
+    public void remove(String key) {
+        imp.remove(key);
     }
 
     @Override

@@ -20,15 +20,12 @@ import ch.kinet.reflect.MetaObject;
 import ch.kinet.reflect.Property;
 import ch.kinet.reflect.PropertyValues;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 class InsertStatement<T> extends Statement<T> {
 
     private final Map<String, String> autoIncrements;
     private final MetaObject<T> metaObject;
-    private final Set<String> timestamps;
 
     static <T> InsertStatement<T> create(Connection connection, String schemaName, Class<T> dataClass) {
         return new InsertStatement<>(new InsertStatementBuilder<>(connection, schemaName, dataClass));
@@ -38,16 +35,11 @@ class InsertStatement<T> extends Statement<T> {
         super(builder);
         this.autoIncrements = builder.autoIncrements();
         this.metaObject = builder.metaObject();
-        this.timestamps = builder.timestamps();
     }
 
     T execute(Map<String, Object> propertyValues) {
         for (Map.Entry<String, String> entry : autoIncrements.entrySet()) {
             propertyValues.put(entry.getKey(), connection().nextId(entry.getValue()));
-        }
-
-        for (String property : timestamps) {
-            propertyValues.put(property, connection().now());
         }
 
         for (Property property : metaObject.persistentProperties()) {
@@ -86,21 +78,16 @@ class InsertStatement<T> extends Statement<T> {
     private static class InsertStatementBuilder<U> extends StatementBuilder<U> {
 
         private final Map<String, String> autoIncrements;
-        private final Set<String> timestamps;
 
         InsertStatementBuilder(Connection connection, String schemaName, Class<U> targetClass) {
             super(connection, schemaName, targetClass);
             this.autoIncrements = new HashMap<>();
-            this.timestamps = new HashSet<>();
             for (Property property : metaObject().persistentProperties()) {
                 switch (property.getPropertyInit()) {
                     case AutoIncrement:
                         autoIncrements.put(property.getName(), sequenceName(property.getName()));
                         break;
                     case Manual:
-                        break;
-                    case Timestamp:
-                        timestamps.add(property.getName());
                         break;
                 }
 
@@ -118,10 +105,6 @@ class InsertStatement<T> extends Statement<T> {
 
         final Map<String, String> autoIncrements() {
             return autoIncrements;
-        }
-
-        final Set<String> timestamps() {
-            return timestamps;
         }
 
         private void appendColumnNames() {

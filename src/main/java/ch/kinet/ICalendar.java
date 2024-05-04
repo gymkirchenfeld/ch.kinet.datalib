@@ -16,13 +16,20 @@
  */
 package ch.kinet;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
 public final class ICalendar {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    private final StringBuilder data;
 
     public static final ICalendar create(String prodid) {
         return new ICalendar(prodid);
     }
-
-    private StringBuilder data;
 
     private ICalendar(String prodid) {
         data = new StringBuilder();
@@ -34,15 +41,11 @@ public final class ICalendar {
         data.append("METHOD:PUBLISH\n");
     }
 
-    public void addEvent(String uid, String title, DateSpanI duration) {
+    public void addEvent(String uid, String title, DateInterval duration) {
         addEvent(uid, title, duration.getStartDate(), null, duration.getEndDate(), null);
     }
 
-    public void addEvent(String uid, String title, Date startDay, Date endDay) {
-        addEvent(uid, title, startDay, null, endDay, null);
-    }
-
-    public void addEvent(String uid, String title, Date startDay, Time startTime, Date endDay, Time endTime) {
+    public void addEvent(String uid, String title, LocalDate startDay, LocalTime startTime, LocalDate endDay, LocalTime endTime) {
         data.append("BEGIN:VEVENT\n");
         data.append("UID:");
         data.append(uid);
@@ -53,13 +56,11 @@ public final class ICalendar {
         data.append("CLASS:PUBLIC\n");
         if (startTime != null) {
             data.append("DTSTART:");
-            data.append(startDay.formatICalendar());
-            data.append("T");
-            data.append(startTime.formatICalendar());
+            data.append(LocalDateTime.of(startDay, startTime).format(TIMESTAMP_FORMAT));
         }
         else {
             data.append("DTSTART;VALUE=DATE:");
-            data.append(startDay.formatICalendar());
+            data.append(startDay.format(DATE_FORMAT));
         }
 
         data.append("\n");
@@ -69,18 +70,16 @@ public final class ICalendar {
                 endTime = startTime;
             }
             data.append("DTEND:");
-            data.append(endDay.formatICalendar());
-            data.append("T");
-            data.append(endTime.formatICalendar());
+            data.append(LocalDateTime.of(endDay, endTime).format(TIMESTAMP_FORMAT));
         }
         else {
             data.append("DTEND;VALUE=DATE:");
-            data.append(endDay.formatICalendar());
+            data.append(endDay.format(DATE_FORMAT));
         }
 
         data.append("\n");
         data.append("DTSTAMP:");
-        data.append(Timestamp.now().formatICalendar());
+        data.append(LocalDateTime.now().format(TIMESTAMP_FORMAT));
         data.append("\n");
         data.append("END:VEVENT\n");
     }

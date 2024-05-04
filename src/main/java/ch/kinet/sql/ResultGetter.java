@@ -17,13 +17,12 @@
 package ch.kinet.sql;
 
 import ch.kinet.Binary;
-import ch.kinet.Date;
-import ch.kinet.Time;
-import ch.kinet.Timestamp;
 import ch.kinet.reflect.Property;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -65,9 +64,6 @@ abstract class ResultGetter {
         else if (propertyClass.equals(Boolean.TYPE)) {
             return new BooleanGetter(property, columnName);
         }
-        else if (propertyClass.equals(Date.class)) {
-            return new DateGetter(property, columnName);
-        }
         else if (propertyClass.equals(Double.TYPE)) {
             return new DoubleGetter(property, columnName);
         }
@@ -76,6 +72,12 @@ abstract class ResultGetter {
         }
         else if (propertyClass.equals(LocalDate.class)) {
             return new LocalDateGetter(property, columnName);
+        }
+        else if (propertyClass.equals(LocalDateTime.class)) {
+            return new LocalDateTimeGetter(property, columnName);
+        }
+        else if (propertyClass.equals(LocalTime.class)) {
+            return new LocalTimeGetter(property, columnName);
         }
         else if (propertyClass.equals(Long.TYPE)) {
             return new LongGetter(property, columnName);
@@ -91,12 +93,6 @@ abstract class ResultGetter {
         }
         else if (propertyClass.equals(String.class)) {
             return new StringGetter(property, columnName);
-        }
-        else if (propertyClass.equals(Time.class)) {
-            return new TimeGetter(property, columnName);
-        }
-        else if (propertyClass.equals(Timestamp.class)) {
-            return new TimestampGetter(property, columnName);
         }
         else if (propertyClass.equals(UUID.class)) {
             return new UUIDGetter(property, columnName);
@@ -199,18 +195,6 @@ abstract class ResultGetter {
         }
     }
 
-    private static class DateGetter extends ValueGetter {
-
-        public DateGetter(Property property, String columnName) {
-            super(property, columnName);
-        }
-
-        @Override
-        protected Object doGetValue(ResultSet resultSet) throws Exception {
-            return Date.from(resultSet.getDate(columnName));
-        }
-    }
-
     private static class DoubleGetter extends ValueGetter {
 
         public DoubleGetter(Property property, String columnName) {
@@ -263,6 +247,32 @@ abstract class ResultGetter {
         protected Object doGetValue(ResultSet resultSet) throws Exception {
             java.sql.Date value = resultSet.getDate(columnName);
             return value == null ? null : value.toLocalDate();
+        }
+    }
+
+    private static class LocalDateTimeGetter extends ValueGetter {
+
+        public LocalDateTimeGetter(Property property, String columnName) {
+            super(property, columnName);
+        }
+
+        @Override
+        protected Object doGetValue(ResultSet resultSet) throws Exception {
+            java.sql.Timestamp value = resultSet.getTimestamp(columnName);
+            return value == null ? null : value.toLocalDateTime();
+        }
+    }
+
+    private static class LocalTimeGetter extends ValueGetter {
+
+        public LocalTimeGetter(Property property, String columnName) {
+            super(property, columnName);
+        }
+
+        @Override
+        protected Object doGetValue(ResultSet resultSet) throws Exception {
+            java.sql.Time value = resultSet.getTime(columnName);
+            return value == null ? null : value.toLocalTime();
         }
     }
 
@@ -323,30 +333,6 @@ abstract class ResultGetter {
         @Override
         protected Object doGetValue(ResultSet resultSet) throws Exception {
             return resultSet.getString(columnName);
-        }
-    }
-
-    private static class TimeGetter extends ValueGetter {
-
-        public TimeGetter(Property property, String columnName) {
-            super(property, columnName);
-        }
-
-        @Override
-        protected Object doGetValue(ResultSet resultSet) throws Exception {
-            return Time.from(resultSet.getTime(columnName));
-        }
-    }
-
-    private static class TimestampGetter extends ValueGetter {
-
-        public TimestampGetter(Property property, String columnName) {
-            super(property, columnName);
-        }
-
-        @Override
-        protected Object doGetValue(ResultSet resultSet) throws Exception {
-            return Timestamp.from(resultSet.getTimestamp(columnName));
         }
     }
 

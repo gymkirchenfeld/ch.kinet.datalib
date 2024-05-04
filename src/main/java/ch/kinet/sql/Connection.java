@@ -16,7 +16,6 @@
  */
 package ch.kinet.sql;
 
-import ch.kinet.Timestamp;
 import ch.kinet.reflect.MetaObject;
 import ch.kinet.reflect.Property;
 import java.sql.Array;
@@ -37,14 +36,11 @@ import java.util.stream.Stream;
 
 public final class Connection {
 
-    private static final String NOW_SELECT_SQL =
-        "select now()";
     private static final String SEQUENCE_SELECT_SQL =
         "select nextval(?)";
     private final Map<Class<?>, Lookup<?>> lookupMap;
     private final Object sequenceSelectStatementLock;
     private java.sql.Connection connection;
-    private PreparedStatement nowStatement;
     private PreparedStatement sequenceSelectStatement;
     private String user;
 
@@ -83,7 +79,6 @@ public final class Connection {
     public void connect(DbSpec spec) {
         user = spec.getUserName();
         connection = Connector.connect(spec);
-        nowStatement = prepareStatement(NOW_SELECT_SQL);
         sequenceSelectStatement = prepareStatement(SEQUENCE_SELECT_SQL);
         connected();
     }
@@ -157,18 +152,6 @@ public final class Connection {
         }
         else {
             return lookup.get(key);
-        }
-    }
-
-    public Timestamp now() {
-        try {
-            nowStatement.execute();
-            final ResultSet resultSet = nowStatement.getResultSet();
-            resultSet.next();
-            return Timestamp.from(resultSet.getTimestamp(1));
-        }
-        catch (SQLException ex) {
-            throw new QueryTimestampException(ex);
         }
     }
 

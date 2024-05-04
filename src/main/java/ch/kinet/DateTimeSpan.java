@@ -16,22 +16,30 @@
  */
 package ch.kinet;
 
-public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
-    public static TimeSpan create(Date startDate, Time startTime, Date endDate, Time endTime) {
-        return new TimeSpan(startDate, startTime, endDate, endTime);
+public final class DateTimeSpan implements Comparable<DateTimeSpan>, DateTimeInterval {
+
+    public static DateTimeSpan of(LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
+        return new DateTimeSpan(startDate, startTime, endDate, endTime);
     }
 
-    public static TimeSpan create(Date startDate, Date endDate) {
-        return new TimeSpan(startDate, null, endDate, null);
+    public static DateTimeSpan of(LocalDate startDate, LocalDate endDate) {
+        return new DateTimeSpan(startDate, null, endDate, null);
     }
 
-    private final Date startDate;
-    private final Time startTime;
-    private final Date endDate;
-    private final Time endTime;
+    public static DateTimeSpan of(DateInterval interval) {
+        return of(interval.getStartDate(), interval.getEndDate());
+    }
 
-    private TimeSpan(Date startDate, Time startTime, Date endDate, Time endTime) {
+    private final LocalDate startDate;
+    private final LocalTime startTime;
+    private final LocalDate endDate;
+    private final LocalTime endTime;
+
+    private DateTimeSpan(LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
         this.startDate = startDate;
         this.startTime = startTime;
         this.endDate = endDate;
@@ -39,7 +47,7 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
     }
 
     @Override
-    public int compareTo(TimeSpan other) {
+    public int compareTo(DateTimeSpan other) {
         int result = Util.compare(startDate, other.startDate);
         if (result == 0) {
             result = Util.compare(startTime, other.startTime);
@@ -56,15 +64,19 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
         return result;
     }
 
-    public boolean contains(Date date) {
-        return date != null && date.between(startDate, endDate);
+    public boolean contains(LocalDate date) {
+        return date != null && Date.isBetween(date, startDate, endDate);
     }
 
-    public DateSpanI dateSpan() {
-        return DateSpan.create(startDate, endDate);
+    public String durationText() {
+        StringBuilder result = new StringBuilder();
+        result.append(Date.formatDMY(startDate));
+        result.append(" – ");
+        result.append(Date.formatDMY(endDate));
+        return result.toString();
     }
 
-    public Timestamp endDateTime() {
+    public LocalDateTime endDateTime() {
         return makeEndDateTime(endDate, endTime);
     }
 
@@ -79,11 +91,11 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
             return false;
         }
 
-        if (endDate.before(startDate)) {
+        if (endDate.isBefore(startDate)) {
             return false;
         }
 
-        if (startDate.equals(endDate) && startTime != null && endTime != null && endTime.before(startTime)) {
+        if (startDate.equals(endDate) && startTime != null && endTime != null && endTime.isBefore(startTime)) {
             return false;
         }
 
@@ -91,32 +103,32 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
     }
 
     @Override
-    public Date getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 
     @Override
-    public Time getEndTime() {
+    public LocalTime getEndTime() {
         return endTime;
     }
 
     @Override
-    public Date getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
     @Override
-    public Time getStartTime() {
+    public LocalTime getStartTime() {
         return startTime;
     }
 
-    public boolean overlapsWith(DateSpanI other) {
+    public boolean overlapsWith(DateInterval other) {
         if (other == null) {
             return false;
         }
 
-        final Date otherStart = other.getStartDate();
-        final Date otherEnd = other.getEndDate();
+        LocalDate otherStart = other.getStartDate();
+        LocalDate otherEnd = other.getEndDate();
         // an interval without start and end always overlaps
         if ((startDate == null && endDate == null) || (otherStart == null && otherEnd == null)) {
             return true;
@@ -129,14 +141,14 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
 
         // here, both intervals have either a start or an end or both
         if (startDate == null || otherEnd == null) {
-            return !endDate.before(otherStart);
+            return !endDate.isBefore(otherStart);
         }
 
         if (endDate == null || otherStart == null) {
-            return !startDate.after(otherEnd);
+            return !startDate.isAfter(otherEnd);
         }
 
-        return !endDate.before(otherStart) && !startDate.after(otherEnd);
+        return !endDate.isBefore(otherStart) && !startDate.isAfter(otherEnd);
     }
 
     /**
@@ -145,27 +157,32 @@ public final class TimeSpan implements Comparable<TimeSpan>, TimeSpanI {
      * @param other the other time span
      * @return <code>true</code> if this time span overlaps the other time span, otherwise <code>false</code>
      */
-    public boolean overlapsWith(TimeSpanI other) {
-        Timestamp otherStart = makeStartDateTime(other.getStartDate(), other.getStartTime());
-        Timestamp otherEnd = makeEndDateTime(other.getEndDate(), other.getEndTime());
-        return !(!startDateTime().before(otherEnd) || !endDateTime().after(otherStart));
+    public boolean overlapsWith(DateTimeInterval other) {
+        LocalDateTime otherStart = makeStartDateTime(other.getStartDate(), other.getStartTime());
+        LocalDateTime otherEnd = makeEndDateTime(other.getEndDate(), other.getEndTime());
+        return !(!startDateTime().isBefore(otherEnd) || !endDateTime().isAfter(otherStart));
     }
 
-    public Timestamp startDateTime() {
+    public LocalDateTime startDateTime() {
         return makeStartDateTime(startDate, startTime);
     }
 
-    private static Timestamp makeEndDateTime(Date endDate, Time endTime) {
-        return Timestamp.create(
-            endDate == null ? Date.today() : endDate,
-            endTime == null ? Time.create(23, 59, 59) : endTime
+    public DateInterval toDateSpan() {
+        return DateSpan.of(startDate, endDate);
+    }
+
+    private static LocalDateTime makeEndDateTime(LocalDate endDate, LocalTime endTime) {
+        return LocalDateTime.of(
+            endDate == null ? LocalDate.now() : endDate,
+            endTime == null ? LocalTime.of(23, 59, 59) : endTime
         );
     }
 
-    private static Timestamp makeStartDateTime(Date startDate, Time startTime) {
-        return Timestamp.create(
+    private static LocalDateTime makeStartDateTime(LocalDate startDate, LocalTime startTime) {
+        return LocalDateTime.of(
             startDate,
-            startTime == null ? Time.create(0, 0, 0) : startTime
+            startTime == null ? LocalTime.of(0, 0, 0) : startTime
         );
     }
+
 }

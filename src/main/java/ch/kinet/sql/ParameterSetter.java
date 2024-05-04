@@ -17,13 +17,12 @@
 package ch.kinet.sql;
 
 import ch.kinet.Binary;
-import ch.kinet.Date;
-import ch.kinet.Time;
-import ch.kinet.Timestamp;
 import ch.kinet.reflect.Property;
 import java.sql.PreparedStatement;
 import java.sql.Types;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -48,9 +47,6 @@ abstract class ParameterSetter {
         else if (Collection.class.isAssignableFrom(propertyClass)) {
             return new CollectionSetter(connection, property, index);
         }
-        else if (propertyClass.equals(Date.class)) {
-            return new DateSetter(property, index);
-        }
         else if (propertyClass.equals(Double.TYPE)) {
             return new DoubleSetter(property, index);
         }
@@ -60,6 +56,12 @@ abstract class ParameterSetter {
         else if (propertyClass.equals(LocalDate.class)) {
             return new LocalDateSetter(property, index);
         }
+        else if (propertyClass.equals(LocalDateTime.class)) {
+            return new LocalDateTimeSetter(property, index);
+        }
+        else if (propertyClass.equals(LocalTime.class)) {
+            return new LocalTimeSetter(property, index);
+        }
         else if (propertyClass.equals(Long.TYPE)) {
             return new LongSetter(property, index);
         }
@@ -68,12 +70,6 @@ abstract class ParameterSetter {
         }
         else if (propertyClass.equals(String.class)) {
             return new StringSetter(property, index);
-        }
-        else if (propertyClass.equals(Time.class)) {
-            return new TimeSetter(property, index);
-        }
-        else if (propertyClass.equals(Timestamp.class)) {
-            return new TimestampSetter(property, index);
         }
         else if (propertyClass.equals(UUID.class)) {
             return new UUIDSetter(property, index);
@@ -200,23 +196,6 @@ abstract class ParameterSetter {
         }
     }
 
-    private static class DateSetter extends ValueSetter {
-
-        public DateSetter(Property property, int index) {
-            super(property, index);
-        }
-
-        @Override
-        protected void doSetNull(PreparedStatement statement) throws Exception {
-            statement.setNull(index, Types.DATE);
-        }
-
-        @Override
-        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
-            statement.setDate(index, ((Date) value).toSqlDate());
-        }
-    }
-
     private static class DoubleSetter extends ValueSetter {
 
         public DoubleSetter(Property property, int index) {
@@ -268,6 +247,40 @@ abstract class ParameterSetter {
         }
     }
 
+    private static class LocalDateTimeSetter extends ValueSetter {
+
+        public LocalDateTimeSetter(Property property, int index) {
+            super(property, index);
+        }
+
+        @Override
+        protected void doSetNull(PreparedStatement statement) throws Exception {
+            statement.setNull(index, Types.TIMESTAMP);
+        }
+
+        @Override
+        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
+            statement.setTimestamp(index, java.sql.Timestamp.valueOf((LocalDateTime) value));
+        }
+    }
+
+    private static class LocalTimeSetter extends ValueSetter {
+
+        public LocalTimeSetter(Property property, int index) {
+            super(property, index);
+        }
+
+        @Override
+        protected void doSetNull(PreparedStatement statement) throws Exception {
+            statement.setNull(index, Types.TIME);
+        }
+
+        @Override
+        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
+            statement.setTime(index, java.sql.Time.valueOf((LocalTime) value));
+        }
+    }
+
     private static class LongSetter extends ValueSetter {
 
         public LongSetter(Property property, int index) {
@@ -301,7 +314,7 @@ abstract class ParameterSetter {
 
         @Override
         protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
-            Object object = ((Stream) value).collect(Collectors.toList());
+            Object object = ((Stream<?>) value).collect(Collectors.toList());
             statement.setArray(index, connection.createArrayOf((Collection) object));
         }
     }
@@ -328,40 +341,6 @@ abstract class ParameterSetter {
          */
         private static String sanitizeString(String value) {
             return value.replaceAll("\\x00", "");
-        }
-    }
-
-    private static class TimeSetter extends ValueSetter {
-
-        public TimeSetter(Property property, int index) {
-            super(property, index);
-        }
-
-        @Override
-        protected void doSetNull(PreparedStatement statement) throws Exception {
-            statement.setNull(index, Types.TIME);
-        }
-
-        @Override
-        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
-            statement.setTime(index, ((Time) value).toSqlTime());
-        }
-    }
-
-    private static class TimestampSetter extends ValueSetter {
-
-        public TimestampSetter(Property property, int index) {
-            super(property, index);
-        }
-
-        @Override
-        protected void doSetNull(PreparedStatement statement) throws Exception {
-            statement.setNull(index, Types.TIMESTAMP);
-        }
-
-        @Override
-        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
-            statement.setTimestamp(index, ((Timestamp) value).toSqlTimestamp());
         }
     }
 

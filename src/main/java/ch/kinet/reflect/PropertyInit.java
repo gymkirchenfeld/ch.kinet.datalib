@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -18,5 +18,5 @@ package ch.kinet.reflect;
 
 public enum PropertyInit {
 
-    AutoIncrement, Manual, Timestamp
+    AutoIncrement, Manual
 }

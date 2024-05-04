@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 - 2023 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2024 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,33 +16,13 @@
  */
 package ch.kinet;
 
-public interface TimeSpanI {
+public final class StreamUtils {
 
-    /**
-     * Returns the end date.
-     *
-     * @return the end date
-     */
-    Date getEndDate();
+    public static boolean isNotEmpty(String string) {
+        return string != null && string.length() > 0;
+    }
 
-    /**
-     * Returns the end time.
-     *
-     * @return the end time
-     */
-    Time getEndTime();
-
-    /**
-     * Returns the start date.
-     *
-     * @return the start date
-     */
-    Date getStartDate();
-
-    /**
-     * Returns the start time.
-     *
-     * @return the start time
-     */
-    Time getStartTime();
+    public static boolean isNotNull(Object object) {
+        return object != null;
+    }
 }
