@@ -14,51 +14,28 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.kinet.ldap;
+package ch.kinet.ldaptive;
 
-public final class LdapSpec {
+public final class AdSpec {
 
-    private String domain;
-    private char[] password;
-    private int port;
+    private String password;
     private String serverName;
     private String userName;
     private boolean useSSL;
 
-    public static LdapSpec create() {
-        return new LdapSpec();
+    public static AdSpec create() {
+        return new AdSpec();
     }
 
-    public static LdapSpec create(LdapSpec orig) {
-        LdapSpec result = new LdapSpec();
-        result.domain = orig.domain;
-        result.password = orig.password;
-        result.port = orig.port;
-        result.serverName = orig.serverName;
-        result.userName = orig.userName;
-        result.useSSL = orig.useSSL;
-        return result;
+    private AdSpec() {
     }
 
-    public String getDomain() {
-        return domain;
-    }
-
-    public char[] getPassword() {
+    public String getPassword() {
         return password;
     }
 
-    public int getPort() {
-        return port;
-    }
-
     public String getProtocol() {
-        if (useSSL) {
-            return "ldaps://";
-        }
-        else {
-            return "ldap://";
-        }
+        return useSSL ? "ldaps://" : "ldap://";
     }
 
     public String getServerName() {
@@ -73,16 +50,8 @@ public final class LdapSpec {
         return useSSL;
     }
 
-    public void setDomain(String value) {
-        this.domain = value;
-    }
-
-    public void setPassword(char[] value) {
+    public void setPassword(String value) {
         this.password = value;
-    }
-
-    public void setPort(int value) {
-        this.port = value;
     }
 
     public void setServerName(String value) {
@@ -100,12 +69,7 @@ public final class LdapSpec {
     public String url() {
         StringBuilder result = new StringBuilder();
         result.append(getProtocol());
-        result.append(getServerName());
-        result.append(':');
-        result.append(getPort());
+        result.append(serverName);
         return result.toString();
-    }
-
-    private LdapSpec() {
     }
 }

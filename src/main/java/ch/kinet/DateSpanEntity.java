@@ -23,6 +23,7 @@ public class DateSpanEntity extends Entity implements DateInterval {
 
     public static final String DB_END_DATE = "EndDate";
     public static final String DB_START_DATE = "StartDate";
+    public static final String JSON_CURRENT = "current";
     public static final String JSON_END_DATE = "endDate";
     public static final String JSON_START_DATE = "startDate";
     private DateSpan dateSpan = DateSpan.create();
@@ -32,11 +33,11 @@ public class DateSpanEntity extends Entity implements DateInterval {
     }
 
     public final boolean contains(LocalDate date) {
-        return toDateSpan().contains(date);
+        return dateSpan.contains(date);
     }
 
     public String durationText() {
-        return toDateSpan().durationText();
+        return dateSpan.durationText();
     }
 
     @Override
@@ -54,12 +55,6 @@ public class DateSpanEntity extends Entity implements DateInterval {
         return dateSpan.isCurrent();
     }
 
-    @Override
-    @Persistence(ignore = true)
-    public final boolean isValid() {
-        return dateSpan.isValid();
-    }
-
     public final boolean overlapsWith(DateInterval other) {
         return dateSpan.overlapsWith(other);
     }
@@ -72,15 +67,27 @@ public class DateSpanEntity extends Entity implements DateInterval {
         dateSpan = dateSpan.withStartDate(startDate);
     }
 
-    public final DateSpan toDateSpan() {
-        return dateSpan;
-    }
-
     @Override
     public JsonObject toJsonTerse() {
         JsonObject result = super.toJsonTerse();
         result.put(JSON_START_DATE, getStartDate());
+        result.put(JSON_CURRENT, isCurrent());
         result.put(JSON_END_DATE, getEndDate());
+        return result;
+    }
+
+    @Override
+    protected int doCompare(Entity entity) {
+        int result = 0;
+        if (entity instanceof DateSpanEntity) {
+            DateSpanEntity other = (DateSpanEntity) entity;
+            result = dateSpan.compareTo(other.dateSpan);
+        }
+
+        if (result == 0) {
+            result = super.doCompare(entity);
+        }
+
         return result;
     }
 }

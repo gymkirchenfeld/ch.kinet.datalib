@@ -45,7 +45,7 @@ public final class ICalendar {
         addEvent(uid, title, duration.getStartDate(), null, duration.getEndDate(), null);
     }
 
-    public void addEvent(String uid, String title, LocalDate startDay, LocalTime startTime, LocalDate endDay, LocalTime endTime) {
+    public void addEvent(String uid, String title, LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
         data.append("BEGIN:VEVENT\n");
         data.append("UID:");
         data.append(uid);
@@ -56,11 +56,11 @@ public final class ICalendar {
         data.append("CLASS:PUBLIC\n");
         if (startTime != null) {
             data.append("DTSTART:");
-            data.append(LocalDateTime.of(startDay, startTime).format(TIMESTAMP_FORMAT));
+            data.append(LocalDateTime.of(startDate, startTime).format(TIMESTAMP_FORMAT));
         }
         else {
             data.append("DTSTART;VALUE=DATE:");
-            data.append(startDay.format(DATE_FORMAT));
+            data.append(startDate.format(DATE_FORMAT));
         }
 
         data.append("\n");
@@ -70,11 +70,11 @@ public final class ICalendar {
                 endTime = startTime;
             }
             data.append("DTEND:");
-            data.append(LocalDateTime.of(endDay, endTime).format(TIMESTAMP_FORMAT));
+            data.append(LocalDateTime.of(endDate, endTime).format(TIMESTAMP_FORMAT));
         }
         else {
             data.append("DTEND;VALUE=DATE:");
-            data.append(endDay.format(DATE_FORMAT));
+            data.append(endDate.format(DATE_FORMAT));
         }
 
         data.append("\n");

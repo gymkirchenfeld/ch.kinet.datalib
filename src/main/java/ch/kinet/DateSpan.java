@@ -18,9 +18,11 @@ package ch.kinet;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.stream.Stream;
 
-public final class DateSpan implements DateInterval {
+public final class DateSpan implements Comparable<DateSpan>, DateInterval {
 
     private final LocalDate startDate;
     private final LocalDate endDate;
@@ -29,12 +31,28 @@ public final class DateSpan implements DateInterval {
         return new DateSpan(null, null);
     }
 
+    public static DateSpan endingAt(LocalDate endDate) {
+        return new DateSpan(null, endDate);
+    }
+
     public static DateSpan of(LocalDate date) {
         return new DateSpan(date, date);
     }
 
     public static DateSpan of(LocalDate startDate, LocalDate endDate) {
         return new DateSpan(startDate, endDate);
+    }
+
+    public static DateSpan of(DateInterval interval) {
+        return new DateSpan(interval.getStartDate(), interval.getEndDate());
+    }
+
+    public static DateSpan of(DateTimeInterval interval) {
+        return new DateSpan(interval.getStartDate(), interval.getEndDate());
+    }
+
+    public static DateSpan startingAt(LocalDate startDate) {
+        return new DateSpan(startDate, null);
     }
 
     public static DateSpan workWeek(LocalDate date) {
@@ -46,15 +64,29 @@ public final class DateSpan implements DateInterval {
         return of(monday, monday.plusDays(5));
     }
 
-    private DateSpan(LocalDate startDay, LocalDate endDay) {
-        this.startDate = startDay;
-        this.endDate = endDay;
+    private DateSpan(LocalDate startDate, LocalDate endDate) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    @Override
+    public int compareTo(DateSpan other) {
+        int result = Util.compare(startDate, other.startDate);
+        if (result == 0) {
+            result = Util.compare(endDate, other.endDate);
+        }
+
+        return result;
     }
 
     public boolean contains(LocalDate date) {
         return date != null &&
             (startDate == null || !date.isBefore(startDate)) &&
             (endDate == null || !date.isAfter(endDate));
+    }
+
+    public long countDays() {
+        return ChronoUnit.DAYS.between(startDate, endDate);
     }
 
     public String durationText() {
@@ -69,7 +101,7 @@ public final class DateSpan implements DateInterval {
     public boolean equals(Object object) {
         if (object instanceof DateSpan) {
             DateSpan other = (DateSpan) object;
-            return Util.equal(startDate, other.startDate) && Util.equal(endDate, other.endDate);
+            return startDate.equals(other.startDate) && endDate.equals(other.endDate);
         }
         else {
             return super.equals(object);
@@ -98,17 +130,24 @@ public final class DateSpan implements DateInterval {
         return contains(LocalDate.now());
     }
 
-    @Override
     public boolean isValid() {
-        return startDate != null && endDate != null && !startDate.isAfter(endDate);
+        return startDate == null || endDate == null || !startDate.isAfter(endDate);
     }
 
-    public boolean overlapsWith(DateInterval other) {
-        if (other == null || !isValid()) {
+    public boolean overlapsWith(DateInterval interval) {
+        if (interval == null || !isValid()) {
             return false;
         }
 
-        return !(startDate.isAfter(other.getEndDate()) || endDate.isBefore(other.getStartDate()));
+        LocalDate thisStart = ensureStartDate(startDate);
+        LocalDate thisEnd = ensureEndDate(endDate);
+        LocalDate otherStart = ensureStartDate(interval.getStartDate());
+        LocalDate otherEnd = ensureEndDate(interval.getEndDate());
+        return !(thisStart.isAfter(otherEnd) || thisEnd.isBefore(otherStart));
+    }
+
+    public Stream<LocalDate> streamDates() {
+        return startDate.datesUntil(endDate.plusDays(1));
     }
 
     public DateSpan withEndDate(LocalDate endDate) {
@@ -117,5 +156,13 @@ public final class DateSpan implements DateInterval {
 
     public DateSpan withStartDate(LocalDate startDate) {
         return of(startDate, endDate);
+    }
+
+    private static LocalDate ensureStartDate(LocalDate startDate) {
+        return startDate == null ? LocalDate.MIN : startDate;
+    }
+
+    private static LocalDate ensureEndDate(LocalDate endDate) {
+        return endDate == null ? LocalDate.MAX : endDate;
     }
 }

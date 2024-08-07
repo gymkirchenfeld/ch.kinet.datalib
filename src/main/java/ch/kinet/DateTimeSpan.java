@@ -68,6 +68,10 @@ public final class DateTimeSpan implements Comparable<DateTimeSpan>, DateTimeInt
         return date != null && Date.isBetween(date, startDate, endDate);
     }
 
+    public boolean contains(LocalDateTime instant) {
+        return instant != null && Date.isBetween(instant, startDateTime(), endDateTime());
+    }
+
     public String durationText() {
         StringBuilder result = new StringBuilder();
         result.append(Date.formatDMY(startDate));
@@ -78,6 +82,10 @@ public final class DateTimeSpan implements Comparable<DateTimeSpan>, DateTimeInt
 
     public LocalDateTime endDateTime() {
         return makeEndDateTime(endDate, endTime);
+    }
+
+    public boolean isCurrent() {
+        return contains(LocalDateTime.now());
     }
 
     /**
@@ -120,6 +128,12 @@ public final class DateTimeSpan implements Comparable<DateTimeSpan>, DateTimeInt
     @Override
     public LocalTime getStartTime() {
         return startTime;
+    }
+
+    public boolean isAllDay(LocalDate date) {
+        return takesPlaceOn(date) &&
+            (startTime == null || startDate.isBefore(date)) &&
+            (endTime == null || endDate.isAfter(date));
     }
 
     public boolean overlapsWith(DateInterval other) {
@@ -167,22 +181,21 @@ public final class DateTimeSpan implements Comparable<DateTimeSpan>, DateTimeInt
         return makeStartDateTime(startDate, startTime);
     }
 
-    public DateInterval toDateSpan() {
-        return DateSpan.of(startDate, endDate);
+    public boolean takesPlaceOn(LocalDate date) {
+        return Date.isBetween(date, startDate, endDate);
     }
 
     private static LocalDateTime makeEndDateTime(LocalDate endDate, LocalTime endTime) {
         return LocalDateTime.of(
-            endDate == null ? LocalDate.now() : endDate,
-            endTime == null ? LocalTime.of(23, 59, 59) : endTime
+            endDate == null ? LocalDate.MAX : endDate,
+            endTime == null ? LocalTime.MAX : endTime
         );
     }
 
     private static LocalDateTime makeStartDateTime(LocalDate startDate, LocalTime startTime) {
         return LocalDateTime.of(
-            startDate,
-            startTime == null ? LocalTime.of(0, 0, 0) : startTime
+            startDate == null ? LocalDate.MIN : startDate,
+            startTime == null ? LocalTime.MIN : startTime
         );
     }
-
 }

@@ -36,12 +36,4 @@ public interface DateInterval {
      * @return the start date
      */
     LocalDate getStartDate();
-
-    /**
-     * Checks if this date interval is valid. A date interval is valid if has both a start and an end date and if the
-     * end date isn't before the start date
-     *
-     * @return <tt>true</tt> if this date interval is valid, otherwise <tt>false</tt>
-     */
-    boolean isValid();
 }

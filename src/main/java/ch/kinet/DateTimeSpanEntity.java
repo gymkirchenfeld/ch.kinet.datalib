@@ -37,17 +37,6 @@ public class DateTimeSpanEntity extends Entity implements DateTimeInterval {
         super(id);
     }
 
-    @Override
-    public int compareTo(Entity entity) {
-        if (entity instanceof DateTimeSpanEntity) {
-            DateTimeSpanEntity other = (DateTimeSpanEntity) entity;
-            return Util.compare(impl, other.impl);
-        }
-        else {
-            return super.compareTo(entity);
-        }
-    }
-
     public boolean contains(LocalDate date) {
         return impl.contains(date);
     }
@@ -81,6 +70,11 @@ public class DateTimeSpanEntity extends Entity implements DateTimeInterval {
     }
 
     @Persistence(ignore = true)
+    public boolean isCurrent() {
+        return impl.isCurrent();
+    }
+
+    @Persistence(ignore = true)
     public boolean isValid() {
         return impl.isValid();
     }
@@ -109,6 +103,10 @@ public class DateTimeSpanEntity extends Entity implements DateTimeInterval {
         return impl.startDateTime();
     }
 
+    public DateTimeSpan toDateTimeSpan() {
+        return impl;
+    }
+
     @Override
     public JsonObject toJsonTerse() {
         JsonObject result = super.toJsonTerse();
@@ -119,7 +117,14 @@ public class DateTimeSpanEntity extends Entity implements DateTimeInterval {
         return result;
     }
 
-    public DateTimeSpan toLocalDateTimeSpan() {
-        return impl;
+    @Override
+    protected int doCompare(Entity entity) {
+        if (entity instanceof DateTimeSpanEntity) {
+            DateTimeSpanEntity other = (DateTimeSpanEntity) entity;
+            return Util.compare(impl, other.impl);
+        }
+        else {
+            return super.compareTo(entity);
+        }
     }
 }

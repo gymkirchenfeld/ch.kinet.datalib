@@ -25,12 +25,13 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.RuleBasedCollator;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.DayOfWeek;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -43,21 +44,13 @@ import java.util.stream.Stream;
  */
 public final class Util {
 
-    private static final DateTimeFormatter DMY_FORMAT = DateTimeFormatter.ofPattern("dd.MM.YYYY");
-    private static final DateTimeFormatter SHORT_FORMAT = DateTimeFormatter.ofPattern("EE dd.MM.YYYY");
-    private static final DateTimeFormatter TEXT_FORMAT = DateTimeFormatter.ofPattern("d. MMMM yyyy");
     private static final Map<String, String> FILE_NAME_REPLACE_MAP = createFileNameReplaceMap();
     private static final Map<String, String> NAME_REPLACE_MAP = createNameReplaceMap();
     private static final String NAME_ALLOWED_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz.-";
     private static final Collator COLLATOR = initCollator();
     private static final DecimalFormat CURRENCY_FORMAT = initCurrencyFormat();
     private static final String EMAIL_REGEX = "(?:[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
-    private static final ThreadLocal<Pattern> EMAIL_PATTERN = new ThreadLocal<Pattern>() {
-        @Override
-        protected Pattern initialValue() {
-            return Pattern.compile(EMAIL_REGEX);
-        }
-    };
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
     private static final char[] HEX_DIGITS = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
@@ -220,16 +213,12 @@ public final class Util {
         return result.toString();
     }
 
-    public static String formatDateDMY(LocalDate date) {
-        return date == null ? null : date.format(DMY_FORMAT);
+    public static String formatDayOfWeekLong(DayOfWeek dayOfWeek) {
+        return dayOfWeek == null ? null : dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault());
     }
 
-    public static String formatDateShort(LocalDate date) {
-        return date == null ? null : date.format(SHORT_FORMAT);
-    }
-
-    public static String formatDateText(LocalDate date) {
-        return date == null ? null : date.format(TEXT_FORMAT);
+    public static String formatDayOfWeekShort(DayOfWeek dayOfWeek) {
+        return dayOfWeek == null ? null : dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault());
     }
 
     public static String formatPhoneInternational(String number) {
@@ -315,14 +304,6 @@ public final class Util {
 
     public static boolean isEmpty(String s) {
         return s == null || s.isEmpty();
-    }
-
-    public static boolean isValidEmailAddress(String email) {
-        if (isEmpty(email)) {
-            return true;
-        }
-
-        return EMAIL_PATTERN.get().matcher(email).matches();
     }
 
     public static int length(String s) {
@@ -505,6 +486,14 @@ public final class Util {
         catch (UnsupportedEncodingException ex) {
             return s;
         }
+    }
+
+    public static boolean isValidEmailAddress(String email) {
+        if (isEmpty(email)) {
+            return true;
+        }
+
+        return EMAIL_PATTERN.matcher(email).matches();
     }
 
     private static String hexEncode(byte[] byteArray) {

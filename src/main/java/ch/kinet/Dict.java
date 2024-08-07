@@ -42,12 +42,13 @@ public abstract class Dict {
     }
 
     /**
-     * Extracts a date interval from the <code>startDay</code> and <code>endDay</code> keys.
+     * Extracts a date interval from the <code>startDate</code> and <code>endDate</code> keys.
      *
      * @return date interval
      */
     public final DateSpan getDateSpan() {
-        return DateSpan.of(getDate(START_DATE), getDate(END_DATE));
+        // default values ensure that DateSpan is invalid if either start or end date are not specified
+        return DateSpan.of(getDate(START_DATE, LocalDate.MAX), getDate(END_DATE, LocalDate.MIN));
     }
 
     public final DateTimeSpan getDateTimeSpan() {

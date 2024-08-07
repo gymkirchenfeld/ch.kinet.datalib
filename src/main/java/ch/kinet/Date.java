@@ -27,7 +27,7 @@ import java.util.Locale;
 public final class Date {
 
     private static final DateTimeFormatter HM_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
-    private static final DateTimeFormatter DMY_FORMAT = DateTimeFormatter.ofPattern("dd.MM.YYYY");
+    private static final DateTimeFormatter DMY_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter LONG_FORMAT = DateTimeFormatter.ofPattern("EEEE, d. MMMM yyyy");
     private static final DateTimeFormatter SHORT_FORMAT = DateTimeFormatter.ofPattern("EE dd.MM.YYYY");
     private static final DateTimeFormatter TEXT_FORMAT = DateTimeFormatter.ofPattern("d. MMMM yyyy");

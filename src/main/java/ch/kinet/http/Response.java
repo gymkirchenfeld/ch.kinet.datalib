@@ -79,6 +79,10 @@ public class Response {
         return new Response(Status.INTERNAL_SERVER_ERROR);
     }
 
+    public static Response internalServerError(String message) {
+        return new Response(Status.INTERNAL_SERVER_ERROR, Data.text(message));
+    }
+
     public static Response json(JsonObject result) {
         if (result == null) {
             return notFound();
@@ -86,6 +90,12 @@ public class Response {
 
         JsonObject root = JsonObject.create();
         root.put("result", result);
+        return new Response(Status.OK, Data.json(root));
+    }
+
+    public static Response jsonArray(JsonArray array) {
+        JsonObject root = JsonObject.create();
+        root.put("result", array);
         return new Response(Status.OK, Data.json(root));
     }
 
