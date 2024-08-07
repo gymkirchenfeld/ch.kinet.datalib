@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 
 public class Response {
 
+    private static final String JSON_RESULT = "result";
+
     public enum ContentType {
         None, File, Image, Text
     };
@@ -49,7 +51,7 @@ public class Response {
         }
 
         JsonObject root = JsonObject.create();
-        root.putTerse("result", object);
+        root.putTerse(JSON_RESULT, object);
         return new Response(Status.CREATED, Data.json(root));
     }
 
@@ -59,7 +61,7 @@ public class Response {
         }
 
         JsonObject root = JsonObject.create();
-        root.putVerbose("result", object);
+        root.putVerbose(JSON_RESULT, object);
         return new Response(Status.CREATED, Data.json(root));
     }
 
@@ -89,19 +91,19 @@ public class Response {
         }
 
         JsonObject root = JsonObject.create();
-        root.put("result", result);
+        root.put(JSON_RESULT, result);
         return new Response(Status.OK, Data.json(root));
     }
 
     public static Response jsonArray(JsonArray array) {
         JsonObject root = JsonObject.create();
-        root.put("result", array);
+        root.put(JSON_RESULT, array);
         return new Response(Status.OK, Data.json(root));
     }
 
     public static Response jsonArray(Stream<JsonObject> stream) {
         JsonObject root = JsonObject.create();
-        root.put("result", JsonArray.create(stream));
+        root.put(JSON_RESULT, JsonArray.create(stream));
         return new Response(Status.OK, Data.json(root));
     }
 
@@ -119,7 +121,7 @@ public class Response {
         }
 
         JsonObject root = JsonObject.create();
-        root.putTerse("result", result);
+        root.putTerse(JSON_RESULT, result);
         return new Response(Status.OK, Data.json(root));
     }
 
@@ -129,7 +131,7 @@ public class Response {
         }
 
         JsonObject root = JsonObject.create();
-        root.putVerbose("result", result);
+        root.putVerbose(JSON_RESULT, result);
         return new Response(Status.OK, Data.json(root));
     }
 
