@@ -34,6 +34,12 @@ public final class JsonArray {
         return result;
     }
 
+    public static JsonArray createString(Stream<String> elements) {
+        final JsonArray result = new JsonArray(new JSONArray());
+        elements.forEachOrdered(element -> result.add(element));
+        return result;
+    }
+
     public static JsonArray createTerse(Stream<? extends Json> elements) {
         final JsonArray result = new JsonArray(new JSONArray());
         elements.forEachOrdered(element -> result.addTerse(element));
