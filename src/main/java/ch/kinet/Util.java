@@ -302,6 +302,10 @@ public final class Util {
         return equal(toLower(a), toLower(b));
     }
 
+    public static boolean iStartsWith(String a, String b) {
+        return a == null ? false : toLower(a).startsWith(toLower(b));
+    }
+
     public static boolean isEmpty(String s) {
         return s == null || s.isEmpty();
     }
