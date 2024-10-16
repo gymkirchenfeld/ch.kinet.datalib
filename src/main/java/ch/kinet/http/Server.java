@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2022 - 2024 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,9 @@ import ch.kinet.Util;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.form.FormData;
+import io.undertow.server.handlers.form.FormDataParser;
+import io.undertow.server.handlers.form.FormParserFactory;
 import io.undertow.util.HeaderMap;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
@@ -38,6 +41,7 @@ import java.util.Set;
 
 public final class Server implements HttpHandler {
 
+    private static final String MIME_MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String METHOD_DELETE = "DELETE";
     private static final String METHOD_GET = "GET";
     private static final String METHOD_OPTIONS = "OPTIONS";
@@ -58,6 +62,7 @@ public final class Server implements HttpHandler {
 
     private static Set<String> createAcceptedContentTypes() {
         Set<String> result = new HashSet<>();
+        result.add(Data.MIME_TYPE_JSON);
         result.add(Data.MIME_TYPE_JSON);
         return result;
     }
@@ -133,24 +138,53 @@ public final class Server implements HttpHandler {
         return requestHandler.handleRequest(r);
     }
 
+    private Data extractFirstFile(HttpServerExchange exchange) {
+        FormDataParser parser = FormParserFactory.builder().build().createParser(exchange);
+        try {
+            FormData form = parser.parseBlocking();
+            for (String name : form) {
+                for (FormData.FormValue value : form.get(name)) {
+                    if (value.isFileItem()) {
+                        return Data.file(value.getFileItem().getInputStream(), value.getFileName());
+                    }
+                }
+            }
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+
+        return null;
+    }
+
     private Response handleRequestWithBody(HttpServerExchange exchange, Request.Method method) {
         String contentType = exchange.getRequestHeaders().getFirst(Headers.CONTENT_TYPE);
         if (Util.isEmpty(contentType)) {
             return Response.unsupportedMediaType();
         }
 
-        int pos = contentType.indexOf(';');
-        if (pos >= 0) {
-            contentType = contentType.substring(0, pos);
+        Data body;
+        if (contentType.startsWith(MIME_MULTIPART_FORM_DATA)) {
+            body = extractFirstFile(exchange);
+            if (body == null) {
+                return Response.badRequest("Invalid form data");
+            }
         }
+        else {
+            int pos = contentType.indexOf(';');
+            if (pos >= 0) {
+                contentType = contentType.substring(0, pos);
+            }
 
-        if (!acceptedContentTypes.contains(contentType)) {
-            return Response.unsupportedMediaType();
-        }
+            if (!acceptedContentTypes.contains(contentType)) {
+                return Response.unsupportedMediaType();
+            }
 
-        Data body = parseBody(exchange, contentType);
-        if (body == null) {
-            return Response.internalServerError();
+            body = parseBody(exchange, contentType);
+            if (body == null) {
+                return Response.internalServerError();
+            }
         }
 
         Request r = Request.withBody(method, parseAuthorisation(exchange), exchange.getRequestPath(), body);

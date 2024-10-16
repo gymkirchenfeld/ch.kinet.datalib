@@ -80,6 +80,10 @@ public abstract class Data implements Json {
 
     }
 
+    public static Data file(InputStream in, String fileName) throws IOException {
+        return binary(in, fileName, guessMimeType(fileName));
+    }
+
     public static Data file(File file, String fileName) throws IOException {
         try (FileInputStream in = new FileInputStream(file)) {
             return binary(in, fileName, guessMimeType(fileName));
