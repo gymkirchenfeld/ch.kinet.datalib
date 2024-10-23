@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2023 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -51,8 +51,8 @@ public final class Log {
     }
 
     public void clear() {
-        maxLevel = NONE;
         synchronized (lock) {
+            maxLevel = NONE;
             entries.clear();
         }
     }
@@ -86,15 +86,21 @@ public final class Log {
     }
 
     public boolean hasChanges() {
-        return !entries.equals(oldEntries);
+        synchronized (lock) {
+            return !entries.equals(oldEntries);
+        }
     }
 
     public boolean hasError() {
-        return maxLevel >= ERROR;
+        synchronized (lock) {
+            return maxLevel >= ERROR;
+        }
     }
 
     public boolean hasInfo() {
-        return maxLevel >= INFO;
+        synchronized (lock) {
+            return maxLevel >= INFO;
+        }
     }
 
     public void info(String message, Object... args) {
@@ -114,7 +120,9 @@ public final class Log {
     }
 
     public void setDebug(boolean debug) {
-        this.debug = debug;
+        synchronized (lock) {
+            this.debug = debug;
+        }
     }
 
     public void startSession() {
@@ -127,7 +135,9 @@ public final class Log {
     }
 
     public Stream<Entry> streamEntries() {
-        return entries.stream();
+        synchronized (lock) {
+            return entries.stream();
+        }
     }
 
     public void success(String message, Object... args) {
