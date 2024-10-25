@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2021 by Stefan Rothe
+ * Copyright (C) 2012 - 2024 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -18,14 +18,13 @@ package ch.kinet.sql;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 
 class SqlServerConnector extends Connector {
 
     @Override
     java.sql.Connection doConnect(DbSpec spec) {
         try {
-            return DriverManager.getConnection(url(spec), properties(spec));
+            return DriverManager.getConnection(url(spec));
         }
         catch (SQLException ex) {
             if (ex.getMessage().startsWith("Login failed for user")) {
@@ -45,23 +44,10 @@ class SqlServerConnector extends Connector {
         result.append(spec.getDbServer());
         result.append(":");
         result.append(spec.getPort());
+        result.append(";encrypt=false");
+        result.append(";databaseName=").append(spec.getDatabase());
+        result.append(";user=").append(spec.getUserName());
+        result.append(";password=").append(spec.getPassword());
         return result.toString();
-    }
-
-    private Properties properties(DbSpec spec) {
-        final Properties result = new Properties();
-        result.setProperty("database", spec.getDatabase());
-        result.setProperty("user", spec.getUserName().toLowerCase());
-        final char[] password = spec.getPassword();
-        if (password != null) {
-            result.setProperty("password", new String(spec.getPassword()));
-        }
-
-        if (spec.getSslEnabled()) {
-            result.setProperty("ssl", "true");
-            result.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
-        }
-
-        return result;
     }
 }
