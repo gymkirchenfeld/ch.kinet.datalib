@@ -16,6 +16,7 @@
  */
 package ch.kinet.webtoken;
 
+import com.google.gson.JsonSyntaxException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
@@ -53,7 +54,7 @@ public final class JJWT {
         catch (ExpiredJwtException ex) {
             return Token.createInvalidToken(Token.TokenStatus.Expired);
         }
-        catch (MalformedJwtException | IllegalArgumentException ex) {
+        catch (MalformedJwtException | IllegalArgumentException | JsonSyntaxException ex) {
             return Token.createInvalidToken(Token.TokenStatus.Malformed);
         }
         catch (UnsupportedJwtException ex) {
