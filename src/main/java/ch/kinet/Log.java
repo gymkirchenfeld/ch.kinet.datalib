@@ -24,18 +24,21 @@ import java.util.stream.Stream;
 
 public final class Log {
 
-    private static final int NONE = 0;
-    private static final int DEBUG = 1;
-    private static final int INFO = 2;
-    private static final int SUCCESS = 3;
-    private static final int WARNING = 4;
-    private static final int ERROR = 5;
+    public enum Level {
+        debug, info, success, warning, error
+    }
+
+    private static final String JSON_ID = "id";
+    private static final String JSON_DATE = "date";
+    private static final String JSON_TIME = "time";
+    private static final String JSON_LEVEL = "level";
+    private static final String JSON_MESSAGE = "message";
 
     private final Object lock;
     private final List<Entry> entries;
-    private final List<Entry> oldEntries;
     private boolean debug;
-    private int maxLevel;
+    private boolean hasError;
+    private boolean hasInfo;
     private int nextEntryId;
 
     public static Log create() {
@@ -46,33 +49,32 @@ public final class Log {
         debug = true;
         entries = new ArrayList<>();
         lock = new Object();
-        maxLevel = NONE;
-        oldEntries = new ArrayList<>();
     }
 
     public void clear() {
         synchronized (lock) {
-            maxLevel = NONE;
             entries.clear();
+            hasError = false;
+            hasInfo = false;
         }
     }
 
     public void debug(String message, Object... args) {
         if (debug) {
-            addEntry(DEBUG, Util.args(message, args));
+            addEntry(Level.debug, Util.args(message, args));
         }
     }
 
     public void error(String message, Object... args) {
-        addEntry(ERROR, Util.args(message, args));
+        addEntry(Level.error, Util.args(message, args));
     }
 
     public void exception(Throwable throwable) {
-        addEntry(ERROR, throwable.toString());
+        addEntry(Level.error, throwable.toString());
         stackTrace(throwable);
         Throwable cause = throwable.getCause();
         while (cause != null) {
-            addEntry(ERROR, "caused by " + cause.toString());
+            addEntry(Level.error, "caused by " + cause.toString());
             stackTrace(cause);
             cause = cause.getCause();
         }
@@ -81,30 +83,24 @@ public final class Log {
     private void stackTrace(Throwable throwable) {
         StackTraceElement[] stackTrace = throwable.getStackTrace();
         for (int i = 0; i < stackTrace.length; ++i) {
-            addEntry(ERROR, stackTrace[i].toString());
-        }
-    }
-
-    public boolean hasChanges() {
-        synchronized (lock) {
-            return !entries.equals(oldEntries);
+            addEntry(Level.error, stackTrace[i].toString());
         }
     }
 
     public boolean hasError() {
         synchronized (lock) {
-            return maxLevel >= ERROR;
+            return hasError;
         }
     }
 
     public boolean hasInfo() {
         synchronized (lock) {
-            return maxLevel >= INFO;
+            return hasInfo;
         }
     }
 
     public void info(String message, Object... args) {
-        addEntry(INFO, Util.args(message, args));
+        addEntry(Level.info, Util.args(message, args));
     }
 
     public Mail createMail(String subject, String to) {
@@ -125,15 +121,6 @@ public final class Log {
         }
     }
 
-    public void startSession() {
-        synchronized (lock) {
-            oldEntries.clear();
-            oldEntries.addAll(entries);
-            entries.clear();
-            maxLevel = NONE;
-        }
-    }
-
     public Stream<Entry> streamEntries() {
         synchronized (lock) {
             return entries.stream();
@@ -141,11 +128,11 @@ public final class Log {
     }
 
     public void success(String message, Object... args) {
-        addEntry(SUCCESS, Util.args(message, args));
+        addEntry(Level.success, Util.args(message, args));
     }
 
     public void warning(String message, Object... args) {
-        addEntry(WARNING, Util.args(message, args));
+        addEntry(Level.warning, Util.args(message, args));
     }
 
     public List<Log.Entry> toList() {
@@ -168,13 +155,22 @@ public final class Log {
         return result.toString();
     }
 
-    private void addEntry(int level, String message) {
+    private void addEntry(Level level, String message) {
         synchronized (lock) {
             ++nextEntryId;
             Entry entry = new Entry(nextEntryId, level, message);
             entries.add(entry);
-            if (level > maxLevel) {
-                maxLevel = level;
+            switch (level) {
+                case info:
+                    hasInfo = true;
+                    break;
+                case warning:
+                    hasInfo = true;
+                    break;
+                case error:
+                    hasInfo = true;
+                    hasError = true;
+                    break;
             }
         }
     }
@@ -182,11 +178,11 @@ public final class Log {
     public static final class Entry implements Json {
 
         private final int id;
-        private final int level;
+        private final Level level;
         private final String message;
         private final LocalDateTime timestamp;
 
-        Entry(int id, int level, String message) {
+        Entry(int id, Level level, String message) {
             this.id = id;
             this.level = level;
             this.message = message;
@@ -204,51 +200,17 @@ public final class Log {
             }
         }
 
-        public String getLevelCss() {
-            switch (level) {
-                case DEBUG:
-                    return null;
-                case ERROR:
-                    return "danger";
-                case INFO:
-                    return "info";
-                case SUCCESS:
-                    return "success";
-                case WARNING:
-                    return "warning";
-                default:
-                    return null;
-            }
-        }
-
-        public String getLevelIcon() {
-            switch (level) {
-                case DEBUG:
-                    return "fa-bug";
-                case ERROR:
-                    return "fa-ban";
-                case INFO:
-                    return "fa-info";
-                case SUCCESS:
-                    return "fa-check";
-                case WARNING:
-                    return "fa-exclamation";
-                default:
-                    return null;
-            }
-        }
-
         public String getLevelText() {
             switch (level) {
-                case DEBUG:
+                case debug:
                     return "Debug";
-                case ERROR:
+                case error:
                     return "Fehler";
-                case INFO:
+                case info:
                     return "Info";
-                case SUCCESS:
+                case success:
                     return "Erfolg";
-                case WARNING:
+                case warning:
                     return "Warnung";
                 default:
                     return null;
@@ -281,11 +243,11 @@ public final class Log {
         @Override
         public JsonObject toJsonTerse() {
             JsonObject result = JsonObject.create();
-            result.put("id", id);
-            result.put("date", timestamp.toLocalDate());
-            result.put("time", timestamp.toLocalTime());
-            result.put("level", getLevelText());
-            result.put("message", message);
+            result.put(JSON_ID, id);
+            result.put(JSON_DATE, timestamp.toLocalDate());
+            result.put(JSON_TIME, timestamp.toLocalTime());
+            result.put(JSON_LEVEL, getLevelText());
+            result.put(JSON_MESSAGE, message);
             return result;
         }
 
