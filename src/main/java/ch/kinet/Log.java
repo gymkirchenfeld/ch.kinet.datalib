@@ -103,6 +103,12 @@ public final class Log {
         addEntry(Level.info, Util.args(message, args));
     }
 
+    public boolean isEmpty() {
+        synchronized (lock) {
+            return entries.isEmpty();
+        }
+    }
+
     public Mail createMail(String subject, String to) {
         Mail result = Mail.create();
         result.addTo(to);
