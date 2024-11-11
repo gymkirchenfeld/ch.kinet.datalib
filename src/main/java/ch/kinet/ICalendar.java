@@ -74,7 +74,7 @@ public final class ICalendar {
         }
         else {
             data.append("DTEND;VALUE=DATE:");
-            data.append(endDate.format(DATE_FORMAT));
+            data.append(endDate.plusDays(1).format(DATE_FORMAT));
         }
 
         data.append("\n");
