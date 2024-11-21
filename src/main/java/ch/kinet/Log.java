@@ -177,6 +177,8 @@ public final class Log {
                     hasInfo = true;
                     hasError = true;
                     break;
+                default:
+                    break;
             }
         }
     }

@@ -57,7 +57,6 @@ public final class DataManager {
         return connection;
     }
 
-    @SuppressWarnings("unchecked")
     private <T extends BaseData> void createModule(Class<T> clazz) {
         try {
             final BaseData data = (BaseData) clazz.getDeclaredConstructor().newInstance();
