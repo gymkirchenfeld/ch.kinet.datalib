@@ -62,6 +62,10 @@ public final class EventoSearchDefinition implements Json {
     }
 
     public void applyFilter(String fieldName, Filter filter) {
+        if (!fieldMap.containsKey(fieldName)) {
+            throw new IllegalArgumentException("Unknown field name " + fieldName);
+        }
+
         switch (filter.getOperator()) {
             case Single:
                 fieldMap.get(fieldName).setSearchText(filter.getTexts()[0]);

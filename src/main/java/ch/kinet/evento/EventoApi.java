@@ -21,7 +21,6 @@ import ch.kinet.HttpConnection;
 import ch.kinet.HttpException;
 import ch.kinet.JsonArray;
 import ch.kinet.JsonObject;
-import ch.kinet.Util;
 import org.json.JSONException;
 
 /**
@@ -41,7 +40,6 @@ public final class EventoApi {
     private final HttpClient httpClient;
     private String accessToken;
     private String clientToken;
-    private String errorMessage;
     private String tokenType;
 
     public static EventoApi create(EventoConfig config) {
@@ -70,8 +68,7 @@ public final class EventoApi {
             http.writeBody(config.getSecret());
             String response = http.readResponse();
             if (http.getResponseCode() >= 400) {
-                error("Der Evento-Server antwortet mit Fehler: " + http.getResponseCode() + ": " + http.getResponseMessage());
-                return;
+                throw new RuntimeException("Der Evento-Server antwortet mit Fehler: " + http.getResponseCode() + ": " + http.getResponseMessage());
             }
 
             try {
@@ -79,23 +76,34 @@ public final class EventoApi {
                 clientToken = result.getString("access_token");
             }
             catch (JSONException ex) {
-                error("Der Evento-Server sendet ungültiges JSON: '" + response + "'.");
+                throw new RuntimeException("Der Evento-Server sendet ungültiges JSON: '" + response + "'.");
             }
         }
         catch (HttpException ex) {
-            error("Der Evento-Server antwortet mit einem Fehlercode: " + ex.getMessage() + ".");
+            throw new RuntimeException("Der Evento-Server antwortet mit einem Fehlercode: " + ex.getMessage() + ".");
         }
     }
 
     public EventoSearchDefinition loadSearchDefinition(String context, String name) {
-        HttpConnection http = httpClient.get(
-            PROTOCOL_HTTPS + config.getServer() + config.getApiBase() + "/search/definitions/" + context + "/" + name);
-        http.setHeader(AUTHORIZATION_HEADER, authorization());
-        return new EventoSearchDefinition(JsonObject.create(http.readResponse()));
+        String response = null;
+        try {
+            HttpConnection http = httpClient.get(
+                PROTOCOL_HTTPS + config.getServer() + config.getApiBase() + "/search/definitions/" + context + "/" + name);
+            http.setHeader(AUTHORIZATION_HEADER, authorization());
+            response = http.readResponse();
+            return new EventoSearchDefinition(JsonObject.create(response));
+        }
+        catch (JSONException ex) {
+            throw new RuntimeException("Der Evento-Server sendet ungültiges JSON: '" + response + "'.");
+        }
     }
 
     public JsonArray loadView(ViewDefinition viewDef) {
         EventoSearchDefinition searchDefinition = loadSearchDefinition(viewDef.getContext(), viewDef.getName());
+        if (searchDefinition == null) {
+            return JsonArray.create();
+        }
+
         for (String fieldName : viewDef.getFieldNames()) {
             Filter filter = viewDef.getFilter(fieldName);
             if (filter != null) {
@@ -121,8 +129,7 @@ public final class EventoApi {
             String response = http.readResponse();
 
             if (http.getResponseCode() >= 400) {
-                error("Der Evento-Server antwortet mit Fehler: " + http.getResponseCode() + ": " + http.getResponseMessage());
-                return;
+                throw new RuntimeException("Der Evento-Server antwortet mit Fehler: " + http.getResponseCode() + ": " + http.getResponseMessage());
             }
 
             try {
@@ -131,16 +138,12 @@ public final class EventoApi {
                 tokenType = result.getString("token_type");
             }
             catch (JSONException ex) {
-                error("Der Evento-Server sendet ungültiges JSON: '" + response + "'.");
+                throw new RuntimeException("Der Evento-Server sendet ungültiges JSON: '" + response + "'.");
             }
         }
         catch (HttpException ex) {
-            error("Der Evento-Server antwortet mit einem Fehlercode: " + ex.getMessage() + ".");
+            throw new RuntimeException("Der Evento-Server antwortet mit einem Fehlercode: " + ex.getMessage() + ".");
         }
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
     }
 
     public String getPerson(int id) {
@@ -148,10 +151,6 @@ public final class EventoApi {
             PROTOCOL_HTTPS + config.getServer() + config.getApiBase() + "/persons/" + id);
         http.setHeader(AUTHORIZATION_HEADER, authorization());
         return http.readResponse();
-    }
-
-    public boolean hasError() {
-        return !Util.isEmpty(errorMessage);
     }
 
     private JsonArray search(String searchDefinition) {
@@ -165,9 +164,5 @@ public final class EventoApi {
 
     private String authorization() {
         return "token_type=" + tokenType + ", access_token=" + accessToken;
-    }
-
-    private void error(String message) {
-        errorMessage = message;
     }
 }
