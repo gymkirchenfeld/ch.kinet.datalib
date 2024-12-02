@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 public final class ICalendar {
 
@@ -41,11 +42,12 @@ public final class ICalendar {
         data.append("METHOD:PUBLISH\n");
     }
 
-    public void addEvent(String uid, String title, DateInterval duration) {
-        addEvent(uid, title, duration.getStartDate(), null, duration.getEndDate(), null);
+    public void addEvent(String uid, String title, String description, DateInterval duration, Map<String, String> hashMap) {
+        addEvent(uid, title, description, duration.getStartDate(), null, duration.getEndDate(), null, hashMap);
     }
 
-    public void addEvent(String uid, String title, LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
+    public void addEvent(String uid, String title, String description,
+            LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime, Map<String, String> hashMap ) {
         data.append("BEGIN:VEVENT\n");
         data.append("UID:");
         data.append(uid);
@@ -53,6 +55,23 @@ public final class ICalendar {
         data.append("SUMMARY:");
         data.append(title);
         data.append("\n");
+        if(!Util.isEmpty(description)) {
+            data.append("DESCRIPTION:");
+            data.append(description);        
+            data.append("\n");
+        }
+
+        if (hashMap != null) {
+            for (Map.Entry<String, String> entry : hashMap.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                data.append(key);
+                data.append(":");
+                data.append(value);
+                data.append("\n");
+            }
+        }
+
         data.append("CLASS:PUBLIC\n");
         if (startTime != null) {
             data.append("DTSTART:");
@@ -64,6 +83,7 @@ public final class ICalendar {
         }
 
         data.append("\n");
+
 
         if (startTime != null) {
             if (endTime == null) {
