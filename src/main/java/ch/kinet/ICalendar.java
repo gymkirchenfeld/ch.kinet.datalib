@@ -43,10 +43,15 @@ public final class ICalendar {
     }
 
     public void addEvent(String uid, String title, String description, DateInterval duration, Map<String, String> hashMap) {
-        addEvent(uid, title, description, duration.getStartDate(), null, duration.getEndDate(), null, hashMap);
+        addEvent(uid, title, description, null, duration.getStartDate(), null, duration.getEndDate(), null, hashMap);
     }
 
     public void addEvent(String uid, String title, String description,
+            LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime, Map<String, String> hashMap ) {      
+        addEvent(uid, title, description, null, startDate, null, endDate, null, hashMap);                  
+    }
+
+    public void addEvent(String uid, String title, String description, String location,
             LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime, Map<String, String> hashMap ) {
         data.append("BEGIN:VEVENT\n");
         data.append("UID:");
@@ -60,6 +65,11 @@ public final class ICalendar {
             data.append(description);        
             data.append("\n");
         }
+        if(!Util.isEmpty(location)) {
+            data.append("LOCATION:");
+            data.append(location);        
+            data.append("\n");
+        }        
 
         if (hashMap != null) {
             for (Map.Entry<String, String> entry : hashMap.entrySet()) {
