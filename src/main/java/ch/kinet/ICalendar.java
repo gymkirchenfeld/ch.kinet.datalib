@@ -48,7 +48,7 @@ public final class ICalendar {
 
     public void addEvent(String uid, String title, String description,
             LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime, Map<String, String> hashMap ) {      
-        addEvent(uid, title, description, null, startDate, null, endDate, null, hashMap);                  
+        addEvent(uid, title, description, null, startDate, startTime, endDate, endTime, hashMap);                  
     }
 
     public void addEvent(String uid, String title, String description, String location,
