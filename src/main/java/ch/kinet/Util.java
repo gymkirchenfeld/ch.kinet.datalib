@@ -391,6 +391,10 @@ public final class Util {
         return result.toString();
     }
 
+    public static <T> boolean setEquals(Set<T> a, Set<T> b) {
+        return a.containsAll(b) && b.containsAll(a);
+    }
+
     public static String[] split(String string, char separator) {
         final List<String> result = new ArrayList<>();
         int index = string.indexOf(separator);
