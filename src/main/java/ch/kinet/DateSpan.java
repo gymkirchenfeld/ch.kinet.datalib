@@ -87,8 +87,8 @@ public final class DateSpan implements Comparable<DateSpan>, DateInterval {
 
     public boolean contains(DateInterval interval) {
         return interval != null &&
-            (startDate == null || !startDate.isAfter(interval.getStartDate())) &&
-            (endDate == null || !endDate.isBefore(interval.getEndDate()));
+            (startDate == null || contains(interval.getStartDate())) &&
+            (endDate == null || contains(interval.getEndDate()));
     }
 
     public long countDays() {
