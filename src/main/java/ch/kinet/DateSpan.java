@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 by Stefan Rothe, Sebastian Forster
+ * Copyright (C) 2024 - 2025 by Stefan Rothe, Sebastian Forster
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -83,6 +83,12 @@ public final class DateSpan implements Comparable<DateSpan>, DateInterval {
         return date != null &&
             (startDate == null || !date.isBefore(startDate)) &&
             (endDate == null || !date.isAfter(endDate));
+    }
+
+    public boolean contains(DateInterval interval) {
+        return interval != null &&
+            (startDate == null || !startDate.isAfter(interval.getStartDate())) &&
+            (endDate == null || !endDate.isBefore(interval.getEndDate()));
     }
 
     public long countDays() {

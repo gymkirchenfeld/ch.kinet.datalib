@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 by Stefan Rothe
+ * Copyright (C) 2024 - 2025 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -34,6 +34,10 @@ public class DateSpanEntity extends Entity implements DateInterval {
 
     public final boolean contains(LocalDate date) {
         return dateSpan.contains(date);
+    }
+
+    public boolean contains(DateInterval interval) {
+        return dateSpan.contains(interval);
     }
 
     public String durationText() {
