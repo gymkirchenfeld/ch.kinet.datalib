@@ -16,11 +16,12 @@
  */
 package ch.kinet;
 
+import java.util.Iterator;
 import java.util.stream.Stream;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public final class JsonArray {
+public final class JsonArray implements Iterable<JsonObject> {
 
     private final JSONArray imp;
 
@@ -196,4 +197,27 @@ public final class JsonArray {
     JSONArray getImp() {
         return imp;
     }
+
+    @Override
+    public Iterator<JsonObject> iterator() {
+        return new JsonArrayIterator();
+    }
+
+    public class JsonArrayIterator implements Iterator<JsonObject> {
+
+        int cursor;
+    
+        public boolean hasNext() {
+            return cursor != JsonArray.this.imp.length();
+        }
+    
+        public JsonObject next() {
+
+            String result = JsonArray.this.imp.get(cursor).toString();
+            JsonObject obj = JsonObject.create(result);
+            cursor = cursor + 1;
+            return obj;
+            
+        }
+    } 
 }
