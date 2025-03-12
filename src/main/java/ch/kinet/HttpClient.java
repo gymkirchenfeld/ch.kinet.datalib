@@ -101,6 +101,10 @@ public final class HttpClient {
         return openConnection(url, "POST");
     }
 
+    public HttpConnection put(String url) {
+        return openConnection(url, "PUT");
+    }    
+
     private HttpConnection openConnection(String url, String method) {
         try {
             URLConnection connection = URI.create(url).toURL().openConnection();
