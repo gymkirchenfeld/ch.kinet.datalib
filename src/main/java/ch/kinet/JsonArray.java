@@ -95,7 +95,7 @@ public final class JsonArray implements Iterable<JsonObject> {
 
     public void add(JsonArray value) {
         if (value != null) {
-            imp.put(value.getImp());
+            imp.putAll(value.getImp());
         }
     }
 
