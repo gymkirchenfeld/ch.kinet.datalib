@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2021 - 2025 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -18,31 +18,31 @@ package ch.kinet.http;
 
 import ch.kinet.Data;
 
-public final class Request {
+public final class Request<T> {
 
     public enum Method {
         Delete, Get, Patch, Post, Put
     };
 
-    private final String authorisation;
+    private final T authorisation;
     private final Data body;
     private final Method method;
     private final String path;
     private final Query query;
 
-    public static Request createDelete(String authorisation, String path, Query query) {
+    public static <T> Request<T> createDelete(T authorisation, String path, Query query) {
         return new Request(Request.Method.Delete, authorisation, path, query, null);
     }
 
-    public static Request createGet(String authorisation, String path, Query query) {
+    public static <T> Request<T> createGet(T authorisation, String path, Query query) {
         return new Request(Request.Method.Get, authorisation, path, query, null);
     }
 
-    public static Request withBody(Method method, String authorisation, String path, Data body) {
+    public static <T> Request<T> withBody(Method method, T authorisation, String path, Data body) {
         return new Request(method, authorisation, path, null, body);
     }
 
-    protected Request(Method method, String authorisation, String path, Query query, Data body) {
+    protected Request(Method method, T authorisation, String path, Query query, Data body) {
         this.authorisation = authorisation;
         this.body = body;
         this.method = method;
@@ -50,7 +50,7 @@ public final class Request {
         this.query = query;
     }
 
-    public final String getAuthorisation() {
+    public final T getAuthorisation() {
         return authorisation;
     }
 

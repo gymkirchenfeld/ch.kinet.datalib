@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - 2024 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2022 - 2025 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -19,6 +19,16 @@ package ch.kinet.http;
 import ch.kinet.Data;
 import ch.kinet.JsonObject;
 import ch.kinet.Util;
+import com.google.gson.JsonSyntaxException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SigningKeyResolverAdapter;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -33,13 +43,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.Key;
+import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public final class Server implements HttpHandler {
+public final class Server<T> implements HttpHandler {
 
     private static final String MIME_MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String METHOD_DELETE = "DELETE";
@@ -50,9 +62,9 @@ public final class Server implements HttpHandler {
     private static final String METHOD_PUT = "PUT";
     private static final Map<String, String> defaultHeaders = createDefaultHeaders();
     private static final Set<String> acceptedContentTypes = createAcceptedContentTypes();
-    private final RequestHandler requestHandler;
+    private final ServerImplementation<T> requestHandler;
 
-    public static void start(int port, RequestHandler requestHandler) {
+    public static <T> void start(int port, ServerImplementation<T> requestHandler) {
         Undertow server = Undertow.builder()
             .addHttpListener(port, "localhost")
             .setHandler(new Server(requestHandler))
@@ -79,12 +91,13 @@ public final class Server implements HttpHandler {
         return result;
     }
 
-    private Server(RequestHandler requestHandler) {
+    private Server(ServerImplementation<T> requestHandler) {
         this.requestHandler = requestHandler;
     }
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
+        // handle requests in separate threads
         if (exchange.isInIoThread()) {
             exchange.dispatch(this);
             return;
@@ -92,49 +105,55 @@ public final class Server implements HttpHandler {
 
         exchange.startBlocking();
         Response response;
-        try {
-            String method = exchange.getRequestMethod().toString();
-            switch (method) {
-                case METHOD_DELETE:
-                    response = handleDelete(exchange);
-                    break;
-                case METHOD_GET:
-                    response = handleGet(exchange);
-                    break;
-                case METHOD_OPTIONS:
-                    response = Response.ok();
-                    break;
-                case METHOD_PATCH:
-                    response = handleRequestWithBody(exchange, Request.Method.Patch);
-                    break;
-                case METHOD_POST:
-                    response = handleRequestWithBody(exchange, Request.Method.Post);
-                    break;
-                case METHOD_PUT:
-                    response = handleRequestWithBody(exchange, Request.Method.Put);
-                    break;
-                default:
-                    response = Response.methodNotAllowed();
-                    break;
-            }
-
+        T authorisation = parseAuthorisation(exchange);
+        if (authorisation == null) {
+            response = Response.unauthorized();
         }
-        catch (RuntimeException ex) {
-            requestHandler.handleException(ex);
-            response = Response.internalServerError();
+        else {
+            try {
+                String method = exchange.getRequestMethod().toString();
+                switch (method) {
+                    case METHOD_DELETE:
+                        response = handleDelete(authorisation, exchange);
+                        break;
+                    case METHOD_GET:
+                        response = handleGet(authorisation, exchange);
+                        break;
+                    case METHOD_OPTIONS:
+                        response = Response.ok();
+                        break;
+                    case METHOD_PATCH:
+                        response = handleRequestWithBody(authorisation, exchange, Request.Method.Patch);
+                        break;
+                    case METHOD_POST:
+                        response = handleRequestWithBody(authorisation, exchange, Request.Method.Post);
+                        break;
+                    case METHOD_PUT:
+                        response = handleRequestWithBody(authorisation, exchange, Request.Method.Put);
+                        break;
+                    default:
+                        response = Response.methodNotAllowed();
+                        break;
+                }
+
+            }
+            catch (RuntimeException ex) {
+                requestHandler.handleException(ex);
+                response = Response.internalServerError();
+            }
         }
 
         translateResponse(exchange, response);
         exchange.endExchange();
     }
 
-    private Response handleDelete(HttpServerExchange exchange) {
-        Request r = Request.createDelete(parseAuthorisation(exchange), exchange.getRequestPath(), parseQuery(exchange));
+    private Response handleDelete(T authorisation, HttpServerExchange exchange) {
+        Request r = Request.createDelete(authorisation, exchange.getRequestPath(), parseQuery(exchange));
         return requestHandler.handleRequest(r);
     }
 
-    private Response handleGet(HttpServerExchange exchange) {
-        Request r = Request.createGet(parseAuthorisation(exchange), exchange.getRequestPath(), parseQuery(exchange));
+    private Response handleGet(T authorisation, HttpServerExchange exchange) {
+        Request r = Request.createGet(authorisation, exchange.getRequestPath(), parseQuery(exchange));
         return requestHandler.handleRequest(r);
     }
 
@@ -158,7 +177,7 @@ public final class Server implements HttpHandler {
         return null;
     }
 
-    private Response handleRequestWithBody(HttpServerExchange exchange, Request.Method method) {
+    private Response handleRequestWithBody(T authorisation, HttpServerExchange exchange, Request.Method method) {
         String contentType = exchange.getRequestHeaders().getFirst(Headers.CONTENT_TYPE);
         if (Util.isEmpty(contentType)) {
             return Response.unsupportedMediaType();
@@ -187,12 +206,48 @@ public final class Server implements HttpHandler {
             }
         }
 
-        Request r = Request.withBody(method, parseAuthorisation(exchange), exchange.getRequestPath(), body);
+        Request<T> r = Request.withBody(method, authorisation, exchange.getRequestPath(), body);
         return requestHandler.handleRequest(r);
     }
 
-    private String parseAuthorisation(HttpServerExchange exchange) {
-        return exchange.getRequestHeaders().getFirst(Headers.AUTHORIZATION);
+    private T parseAuthorisation(HttpServerExchange exchange) {
+        String authorisationHeader = exchange.getRequestHeaders().getFirst(Headers.AUTHORIZATION);
+        if (!Util.startsWith(authorisationHeader, "Bearer ")) {
+            return requestHandler.publicAuthorisation();
+        }
+
+        String token = authorisationHeader.substring(7);
+        try {
+            Jws<Claims> jws = Jwts.parserBuilder().setSigningKeyResolver(new SigningKeyResolverAdapter() {
+
+                @Override
+                public Key resolveSigningKey(JwsHeader header, Claims claims) {
+                    return requestHandler.getSigningKey(header.getKeyId());
+                }
+            }).build().parseClaimsJws(token);
+
+            Claims claims = jws.getBody();
+            Date expiration = claims.getExpiration();
+            Date notBefore = claims.getNotBefore();
+            Date now = new Date();
+            if (now.before(notBefore) || now.after(expiration)) {
+                return null;
+            }
+
+            return requestHandler.checkAuthorisation(claims);
+        }
+        catch (ExpiredJwtException ex) {
+            return null;
+        }
+        catch (MalformedJwtException | IllegalArgumentException | JsonSyntaxException ex) {
+            return null;
+        }
+        catch (UnsupportedJwtException ex) {
+            return null;
+        }
+        catch (SignatureException ex) {
+            return null;
+        }
     }
 
     private Data parseBody(HttpServerExchange exchange, String contentType) {

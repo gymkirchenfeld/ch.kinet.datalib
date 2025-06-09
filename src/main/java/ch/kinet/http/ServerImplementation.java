@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2023 - 2025 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,9 +16,18 @@
  */
 package ch.kinet.http;
 
-public interface RequestHandler {
+import io.jsonwebtoken.Claims;
+import java.security.PublicKey;
+
+public interface ServerImplementation<T> {
+
+    T checkAuthorisation(Claims claims);
+
+    PublicKey getSigningKey(String keyId);
 
     Response handleRequest(Request request);
 
     void handleException(Throwable exception);
+
+    T publicAuthorisation();
 }
