@@ -43,6 +43,10 @@ public final class Request<T> {
     }
 
     protected Request(Method method, T authorisation, String path, Query query, Data body) {
+        assert method != null;
+        assert authorisation != null;
+        assert path != null;
+
         this.authorisation = authorisation;
         this.body = body;
         this.method = method;
@@ -68,5 +72,18 @@ public final class Request<T> {
 
     public final Query getQuery() {
         return query;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder result = new StringBuilder();
+        result.append(method.toString().toUpperCase());
+        result.append(' ');
+        result.append(path);
+        if (query != null) {
+            result.append(query.toString());
+        }
+
+        return result.toString();
     }
 }

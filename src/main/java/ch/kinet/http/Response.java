@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 - 2024 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2021 - 2025 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -153,6 +153,10 @@ public class Response {
 
     public static Response unauthorized() {
         return new Response(Status.UNAUTHORIZED);
+    }
+
+    public static Response unauthorized(String message) {
+        return new Response(Status.UNAUTHORIZED, Data.text(message));
     }
 
     public static Response unsupportedMediaType() {

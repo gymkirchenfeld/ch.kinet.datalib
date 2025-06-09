@@ -62,7 +62,7 @@ public final class Server<T> implements HttpHandler {
     private static final String METHOD_PUT = "PUT";
     private static final Map<String, String> defaultHeaders = createDefaultHeaders();
     private static final Set<String> acceptedContentTypes = createAcceptedContentTypes();
-    private final ServerImplementation<T> requestHandler;
+    private final ServerImplementation<T> serverImplementation;
 
     public static <T> void start(int port, ServerImplementation<T> requestHandler) {
         Undertow server = Undertow.builder()
@@ -92,7 +92,7 @@ public final class Server<T> implements HttpHandler {
     }
 
     private Server(ServerImplementation<T> requestHandler) {
-        this.requestHandler = requestHandler;
+        this.serverImplementation = requestHandler;
     }
 
     @Override
@@ -104,57 +104,99 @@ public final class Server<T> implements HttpHandler {
         }
 
         exchange.startBlocking();
-        Response response;
-        T authorisation = parseAuthorisation(exchange);
-        if (authorisation == null) {
-            response = Response.unauthorized();
+        Response response = null;
+        T authorisation = null;
+
+        // check authorisation
+        String authorisationHeader = exchange.getRequestHeaders().getFirst(Headers.AUTHORIZATION);
+        if (Util.startsWith(authorisationHeader, "Bearer ")) {
+            String token = authorisationHeader.substring(7);
+            try {
+                Jws<Claims> jws = Jwts.parserBuilder().setSigningKeyResolver(new SigningKeyResolverAdapter() {
+
+                    @Override
+                    public Key resolveSigningKey(JwsHeader header, Claims claims) {
+                        return serverImplementation.getSigningKey(header.getKeyId());
+                    }
+                }).build().parseClaimsJws(token);
+
+                Claims claims = jws.getBody();
+                Date expiration = claims.getExpiration();
+                Date notBefore = claims.getNotBefore();
+                Date now = new Date();
+                if (now.before(notBefore)) {
+                    response = Response.unauthorized("Token is not yet valid.");
+                }
+                if (now.after(expiration)) {
+                    response = Response.unauthorized("Token has expired.");
+                }
+                else {
+                    authorisation = serverImplementation.checkAuthorisation(claims);
+                    if (authorisation == null) {
+                        response = Response.unauthorized();
+                    }
+                }
+            }
+            catch (ExpiredJwtException ex) {
+                response = Response.unauthorized("Token has expired.");
+            }
+            catch (MalformedJwtException | IllegalArgumentException | JsonSyntaxException ex) {
+                response = Response.unauthorized("Invalid token.");
+            }
+            catch (UnsupportedJwtException ex) {
+                response = Response.unauthorized("Unsupported token type.");
+            }
+            catch (SignatureException ex) {
+                response = Response.unauthorized("Invalid token signature.");
+            }
         }
         else {
-            try {
-                String method = exchange.getRequestMethod().toString();
-                switch (method) {
-                    case METHOD_DELETE:
-                        response = handleDelete(authorisation, exchange);
-                        break;
-                    case METHOD_GET:
-                        response = handleGet(authorisation, exchange);
-                        break;
-                    case METHOD_OPTIONS:
-                        response = Response.ok();
-                        break;
-                    case METHOD_PATCH:
-                        response = handleRequestWithBody(authorisation, exchange, Request.Method.Patch);
-                        break;
-                    case METHOD_POST:
-                        response = handleRequestWithBody(authorisation, exchange, Request.Method.Post);
-                        break;
-                    case METHOD_PUT:
-                        response = handleRequestWithBody(authorisation, exchange, Request.Method.Put);
-                        break;
-                    default:
-                        response = Response.methodNotAllowed();
-                        break;
-                }
+            authorisation = serverImplementation.publicAuthorisation();
+        }
 
-            }
-            catch (RuntimeException ex) {
-                requestHandler.handleException(ex);
-                response = Response.internalServerError();
-            }
+        if (authorisation != null) {
+            response = processRequest(authorisation, exchange);
         }
 
         translateResponse(exchange, response);
         exchange.endExchange();
     }
 
-    private Response handleDelete(T authorisation, HttpServerExchange exchange) {
-        Request r = Request.createDelete(authorisation, exchange.getRequestPath(), parseQuery(exchange));
-        return requestHandler.handleRequest(r);
+    private Response processRequest(T authorisation, HttpServerExchange exchange) {
+        try {
+            String method = exchange.getRequestMethod().toString();
+            switch (method) {
+                case METHOD_DELETE:
+                    return processDelete(authorisation, exchange);
+                case METHOD_GET:
+                    return processGet(authorisation, exchange);
+                case METHOD_OPTIONS:
+                    return Response.ok();
+                case METHOD_PATCH:
+                    return processRequestWithBody(authorisation, exchange, Request.Method.Patch);
+                case METHOD_POST:
+                    return processRequestWithBody(authorisation, exchange, Request.Method.Post);
+                case METHOD_PUT:
+                    return processRequestWithBody(authorisation, exchange, Request.Method.Put);
+                default:
+                    return Response.methodNotAllowed();
+            }
+
+        }
+        catch (RuntimeException ex) {
+            serverImplementation.handleException(ex);
+            return Response.internalServerError();
+        }
     }
 
-    private Response handleGet(T authorisation, HttpServerExchange exchange) {
+    private Response processDelete(T authorisation, HttpServerExchange exchange) {
+        Request r = Request.createDelete(authorisation, exchange.getRequestPath(), parseQuery(exchange));
+        return serverImplementation.handleRequest(r);
+    }
+
+    private Response processGet(T authorisation, HttpServerExchange exchange) {
         Request r = Request.createGet(authorisation, exchange.getRequestPath(), parseQuery(exchange));
-        return requestHandler.handleRequest(r);
+        return serverImplementation.handleRequest(r);
     }
 
     private Data extractFirstFile(HttpServerExchange exchange) {
@@ -177,7 +219,7 @@ public final class Server<T> implements HttpHandler {
         return null;
     }
 
-    private Response handleRequestWithBody(T authorisation, HttpServerExchange exchange, Request.Method method) {
+    private Response processRequestWithBody(T authorisation, HttpServerExchange exchange, Request.Method method) {
         String contentType = exchange.getRequestHeaders().getFirst(Headers.CONTENT_TYPE);
         if (Util.isEmpty(contentType)) {
             return Response.unsupportedMediaType();
@@ -207,47 +249,7 @@ public final class Server<T> implements HttpHandler {
         }
 
         Request<T> r = Request.withBody(method, authorisation, exchange.getRequestPath(), body);
-        return requestHandler.handleRequest(r);
-    }
-
-    private T parseAuthorisation(HttpServerExchange exchange) {
-        String authorisationHeader = exchange.getRequestHeaders().getFirst(Headers.AUTHORIZATION);
-        if (!Util.startsWith(authorisationHeader, "Bearer ")) {
-            return requestHandler.publicAuthorisation();
-        }
-
-        String token = authorisationHeader.substring(7);
-        try {
-            Jws<Claims> jws = Jwts.parserBuilder().setSigningKeyResolver(new SigningKeyResolverAdapter() {
-
-                @Override
-                public Key resolveSigningKey(JwsHeader header, Claims claims) {
-                    return requestHandler.getSigningKey(header.getKeyId());
-                }
-            }).build().parseClaimsJws(token);
-
-            Claims claims = jws.getBody();
-            Date expiration = claims.getExpiration();
-            Date notBefore = claims.getNotBefore();
-            Date now = new Date();
-            if (now.before(notBefore) || now.after(expiration)) {
-                return null;
-            }
-
-            return requestHandler.checkAuthorisation(claims);
-        }
-        catch (ExpiredJwtException ex) {
-            return null;
-        }
-        catch (MalformedJwtException | IllegalArgumentException | JsonSyntaxException ex) {
-            return null;
-        }
-        catch (UnsupportedJwtException ex) {
-            return null;
-        }
-        catch (SignatureException ex) {
-            return null;
-        }
+        return serverImplementation.handleRequest(r);
     }
 
     private Data parseBody(HttpServerExchange exchange, String contentType) {
