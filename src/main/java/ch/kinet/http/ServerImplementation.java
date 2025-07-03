@@ -25,7 +25,7 @@ public interface ServerImplementation<T> {
 
     PublicKey getSigningKey(String keyId);
 
-    Response handleRequest(Request request);
+    Response handleRequest(Request<T> request);
 
     void handleException(Throwable exception);
 

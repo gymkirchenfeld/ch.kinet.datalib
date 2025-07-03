@@ -26,6 +26,7 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.PrematureJwtException;
 import io.jsonwebtoken.SigningKeyResolverAdapter;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -44,7 +45,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.Key;
-import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -119,23 +119,13 @@ public final class Server<T> implements HttpHandler {
                         return serverImplementation.getSigningKey(header.getKeyId());
                     }
                 }).build().parseClaimsJws(token);
-
-                Claims claims = jws.getBody();
-                Date expiration = claims.getExpiration();
-                Date notBefore = claims.getNotBefore();
-                Date now = new Date();
-                if (now.before(notBefore)) {
-                    response = Response.unauthorized("Token is not yet valid.");
+                authorisation = serverImplementation.checkAuthorisation(jws.getBody());
+                if (authorisation == null) {
+                    response = Response.unauthorized();
                 }
-                if (now.after(expiration)) {
-                    response = Response.unauthorized("Token has expired.");
-                }
-                else {
-                    authorisation = serverImplementation.checkAuthorisation(claims);
-                    if (authorisation == null) {
-                        response = Response.unauthorized();
-                    }
-                }
+            }
+            catch (PrematureJwtException ex) {
+                response = Response.unauthorized("Token is not yet valid.");
             }
             catch (ExpiredJwtException ex) {
                 response = Response.unauthorized("Token has expired.");
