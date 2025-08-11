@@ -329,10 +329,11 @@ public abstract class Data implements Json {
 
     private static byte[] encodeUTF8(String content) {
         // Add Unicode byte order mark so Microsoft can recognize the encoding.
+        // not needed anymore/Google Calender ics not working
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(0xef);
-        out.write(0xbb);
-        out.write(0xbf);
+        //out.write(0xef);
+        //out.write(0xbb);
+        //out.write(0xbf);
         out.writeBytes(content.getBytes(StandardCharsets.UTF_8));
         return out.toByteArray();
     }

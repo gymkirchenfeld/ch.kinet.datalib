@@ -72,10 +72,11 @@ public final class Binary implements Comparable<Binary> {
         }
 
         // Add Unicode byte order mark so Microsoft can recognize the encoding.
+        // not needed anymore/Google Calender ics not working
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(0xef);
-        out.write(0xbb);
-        out.write(0xbf);
+        //out.write(0xef);
+        //out.write(0xbb);
+        //out.write(0xbf);
         out.writeBytes(text.getBytes(StandardCharsets.UTF_8));
         return new Binary(out.toByteArray());
     }
