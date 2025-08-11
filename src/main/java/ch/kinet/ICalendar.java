@@ -34,12 +34,12 @@ public final class ICalendar {
 
     private ICalendar(String prodid) {
         data = new StringBuilder();
-        data.append("BEGIN:VCALENDAR\n");
-        data.append("VERSION:2.0\n");
+        data.append("BEGIN:VCALENDAR\r\n");
+        data.append("VERSION:2.0\r\n");
         data.append("PRODID:");
         data.append(prodid);
-        data.append("\n");
-        data.append("METHOD:PUBLISH\n");
+        data.append("\r\n");
+        data.append("METHOD:PUBLISH\r\n");
     }
 
     public void addEvent(String uid, String title, String description, DateInterval duration, Map<String, String> hashMap) {
@@ -53,23 +53,23 @@ public final class ICalendar {
 
     public void addEvent(String uid, String title, String description, String location,
             LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime, Map<String, String> hashMap ) {
-        data.append("BEGIN:VEVENT\n");
+        data.append("BEGIN:VEVENT\r\n");
         data.append("UID:");
         data.append(uid);
-        data.append("\n");
+        data.append("\r\n");
         data.append("SUMMARY:");
         data.append(title);
-        data.append("\n");
+        data.append("\r\n");
         if(!Util.isEmpty(description)) {
             data.append("DESCRIPTION:");
-            data.append(description);        
-            data.append("\n");
+            data.append(description);
+            data.append("\r\n");
         }
         if(!Util.isEmpty(location)) {
             data.append("LOCATION:");
-            data.append(location);        
-            data.append("\n");
-        }        
+            data.append(location);
+            data.append("\r\n");
+        }
 
         if (hashMap != null) {
             for (Map.Entry<String, String> entry : hashMap.entrySet()) {
@@ -78,11 +78,11 @@ public final class ICalendar {
                 data.append(key);
                 data.append(":");
                 data.append(value);
-                data.append("\n");
+                data.append("\r\n");
             }
         }
 
-        data.append("CLASS:PUBLIC\n");
+        data.append("CLASS:PUBLIC\r\n");
         if (startTime != null) {
             data.append("DTSTART:");
             data.append(LocalDateTime.of(startDate, startTime).format(TIMESTAMP_FORMAT));
@@ -92,7 +92,7 @@ public final class ICalendar {
             data.append(startDate.format(DATE_FORMAT));
         }
 
-        data.append("\n");
+        data.append("\r\n");
 
 
         if (startTime != null) {
@@ -107,15 +107,15 @@ public final class ICalendar {
             data.append(endDate.plusDays(1).format(DATE_FORMAT));
         }
 
-        data.append("\n");
+        data.append("\r\n");
         data.append("DTSTAMP:");
         data.append(LocalDateTime.now().format(TIMESTAMP_FORMAT));
-        data.append("\n");
-        data.append("END:VEVENT\n");
+        data.append("\r\n");
+        data.append("END:VEVENT\r\n");
     }
 
     @Override
     public String toString() {
-        return data.toString() + "END:VCALENDAR\n";
+        return data.toString() + "END:VCALENDAR\r\n";
     }
 }
