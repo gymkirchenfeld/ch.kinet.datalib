@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - 2023 by Sebastian Forster, Stefan Rothe
+ * Copyright (C) 2022 - 2025 by Sebastian Forster, Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -291,7 +291,14 @@ public abstract class Data implements Json {
 
         @Override
         public byte[] toBytes() {
-            return encodeUTF8(content);
+            // Add Unicode byte order mark to CSVs so Microsoft can recognize the encoding.
+            if (MIME_TYPE_CSV.equals(mimeType())) {
+                return encodeUTF8withBOM(content);
+            }
+            else {
+                // Don't user BOM by default, Google Calender ics not working.
+                return encodeUTF8(content);
+            }
         }
 
         @Override
@@ -328,12 +335,16 @@ public abstract class Data implements Json {
     }
 
     private static byte[] encodeUTF8(String content) {
-        // Add Unicode byte order mark so Microsoft can recognize the encoding.
-        // not needed anymore/Google Calender ics not working
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        //out.write(0xef);
-        //out.write(0xbb);
-        //out.write(0xbf);
+        out.writeBytes(content.getBytes(StandardCharsets.UTF_8));
+        return out.toByteArray();
+    }
+
+    private static byte[] encodeUTF8withBOM(String content) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(0xef);
+        out.write(0xbb);
+        out.write(0xbf);
         out.writeBytes(content.getBytes(StandardCharsets.UTF_8));
         return out.toByteArray();
     }
