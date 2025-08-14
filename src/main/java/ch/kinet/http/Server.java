@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.xnio.Options;
 
 public final class Server<T> implements HttpHandler {
 
@@ -64,8 +65,13 @@ public final class Server<T> implements HttpHandler {
     private static final Set<String> acceptedContentTypes = createAcceptedContentTypes();
     private final ServerImplementation<T> serverImplementation;
 
-    public static <T> void start(int port, ServerImplementation<T> requestHandler) {
+    public static <T> void start(int port, int ioThreads, int workerThreads,
+                                 ServerImplementation<T> requestHandler) {
         Undertow server = Undertow.builder()
+            .setWorkerThreads(port)
+            .setWorkerOption(Options.WORKER_IO_THREADS, ioThreads)
+            .setWorkerOption(Options.WORKER_TASK_CORE_THREADS, workerThreads)
+            .setWorkerOption(Options.WORKER_TASK_MAX_THREADS, workerThreads)
             .addHttpListener(port, "localhost")
             .setHandler(new Server(requestHandler))
             .build();
