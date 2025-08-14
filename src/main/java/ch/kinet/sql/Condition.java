@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2024 by Stefan Rothe
+ * Copyright (C) 2012 - 2025 by Stefan Rothe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,8 +16,12 @@
  */
 package ch.kinet.sql;
 
-import java.util.Collection;
 import ch.kinet.DateInterval;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class Condition {
 
@@ -63,6 +67,10 @@ public abstract class Condition {
         return new ILike(propertyName, value);
     }
 
+    public static <T> Condition in(String propertyName, Stream<T> values) {
+        return new In(propertyName, values);
+    }
+
     public static Condition isNull(String propertyName) {
         return new IsNull(propertyName);
     }
@@ -94,10 +102,10 @@ public abstract class Condition {
 
     private static class And extends Condition {
 
-        private final Condition[] children;
+        private final List<Condition> children;
 
         And(Condition[] children) {
-            this.children = children;
+            this.children = Arrays.asList(children);
         }
 
         @Override
@@ -209,6 +217,34 @@ public abstract class Condition {
             builder.appendFieldName(propertyName);
             builder.append(" ilike ");
             builder.appendBoundParameter(propertyName, value);
+        }
+    }
+
+    private static class In<V> extends Condition {
+
+        private final String propertyName;
+        private final List<V> values;
+
+        In(String propertyName, Stream<V> values) {
+            this.propertyName = propertyName;
+            this.values = values.collect(Collectors.toList());
+        }
+
+        @Override
+        <T> void visit(StatementBuilder<T> builder) {
+            builder.appendFieldName(propertyName);
+            builder.append(" in (");
+            boolean first = true;
+            for (V value : values) {
+                if (first) {
+                    first = false;
+                }
+                else {
+                    builder.append(",");
+                }
+                builder.appendBoundParameter(propertyName, value);
+            }
+            builder.append(")");
         }
     }
 
