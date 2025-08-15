@@ -232,6 +232,11 @@ public abstract class Condition {
 
         @Override
         <T> void visit(StatementBuilder<T> builder) {
+            if (values.isEmpty()) {
+                builder.append(" false");
+                return;
+            }
+
             builder.appendFieldName(propertyName);
             builder.append(" in (");
             boolean first = true;
