@@ -26,6 +26,7 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -60,6 +61,9 @@ abstract class ResultGetter {
         Class<?> propertyClass = property.getPropertyClass();
         if (propertyClass.equals(Binary.class)) {
             return new BinaryGetter(property, columnName);
+        }      
+        else if (propertyClass.equals(Optional.class)) {
+            return new OptionalGetter(property, columnName);
         }
         else if (propertyClass.equals(Boolean.TYPE)) {
             return new BooleanGetter(property, columnName);
@@ -192,6 +196,19 @@ abstract class ResultGetter {
         @Override
         protected Object doGetValue(ResultSet resultSet) throws Exception {
             return resultSet.getBoolean(columnName);
+        }
+    }
+
+    private static class OptionalGetter extends ValueGetter {
+
+        public OptionalGetter(Property property, String columnName) {
+            super(property, columnName);               
+        }
+
+        @Override
+        protected Object doGetValue(ResultSet resultSet) throws Exception {
+            Object value = resultSet.getObject(columnName);     
+            return value == null ? Optional.empty() : Optional.of(value);        
         }
     }
 
