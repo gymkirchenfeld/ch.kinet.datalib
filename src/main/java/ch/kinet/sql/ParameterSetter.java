@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,6 +65,9 @@ abstract class ParameterSetter {
         }
         else if (propertyClass.equals(Long.TYPE)) {
             return new LongSetter(property, index);
+        }
+        else if (propertyClass.equals(Optional.class)) {
+            return new OptionalBooleanSetter(property, index);
         }
         else if (Stream.class.isAssignableFrom(propertyClass)) {
             return new StreamSetter(connection, property, index);
@@ -175,6 +179,28 @@ abstract class ParameterSetter {
             statement.setBoolean(index, (Boolean) value);
         }
     }
+
+    private static class OptionalBooleanSetter extends ValueSetter {
+
+        public OptionalBooleanSetter(Property property, int index) {
+            super(property, index);
+        }
+
+        @Override
+        protected void doSetNull(PreparedStatement statement) throws Exception {
+            statement.setNull(index, Types.BOOLEAN);
+        }
+
+        @Override
+        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
+            Optional<Boolean> optionalValue = (Optional) value;
+            if (optionalValue.isEmpty()) {
+                doSetNull(statement);
+                return;
+            }
+            statement.setBoolean(index, optionalValue.get());
+        }
+    }    
 
     private static class CollectionSetter extends ValueSetter {
 

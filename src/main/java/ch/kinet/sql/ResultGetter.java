@@ -62,9 +62,6 @@ abstract class ResultGetter {
         if (propertyClass.equals(Binary.class)) {
             return new BinaryGetter(property, columnName);
         }      
-        else if (propertyClass.equals(Optional.class)) {
-            return new OptionalGetter(property, columnName);
-        }
         else if (propertyClass.equals(Boolean.TYPE)) {
             return new BooleanGetter(property, columnName);
         }
@@ -86,6 +83,9 @@ abstract class ResultGetter {
         else if (propertyClass.equals(Long.TYPE)) {
             return new LongGetter(property, columnName);
         }
+        else if (propertyClass.equals(Optional.class)) {
+            return new OptionalBooleanGetter(property, columnName);
+        }        
         else if (Stream.class.isAssignableFrom(propertyClass)) {
             return new StreamGetter(property, columnName);
         }
@@ -199,9 +199,9 @@ abstract class ResultGetter {
         }
     }
 
-    private static class OptionalGetter extends ValueGetter {
+    private static class OptionalBooleanGetter extends ValueGetter {
 
-        public OptionalGetter(Property property, String columnName) {
+        public OptionalBooleanGetter(Property property, String columnName) {
             super(property, columnName);               
         }
 
