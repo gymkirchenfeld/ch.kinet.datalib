@@ -19,6 +19,8 @@ package ch.kinet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
@@ -26,14 +28,21 @@ public final class ICalendar {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    private static final DateTimeFormatter TIMESTAMP_FORMAT_Z = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
     private final StringBuilder data;
+    private final boolean timezone;
 
-    public static final ICalendar create(String prodid) {
-        return new ICalendar(prodid);
+    public static final ICalendar create(String prodid, boolean timezone) {
+        return new ICalendar(prodid, timezone);
     }
 
-    private ICalendar(String prodid) {
+    static LocalDateTime convertToUtc(LocalDateTime time) {
+        return time.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+    }
+
+    private ICalendar(String prodid, boolean timezone) {
         data = new StringBuilder();
+        this.timezone = timezone;
         data.append("BEGIN:VCALENDAR\r\n");
         data.append("VERSION:2.0\r\n");
         data.append("PRODID:");
@@ -85,7 +94,12 @@ public final class ICalendar {
         data.append("CLASS:PUBLIC\r\n");
         if (startTime != null) {
             data.append("DTSTART:");
-            data.append(LocalDateTime.of(startDate, startTime).format(TIMESTAMP_FORMAT));
+            if (timezone) {
+                data.append(convertToUtc(LocalDateTime.of(startDate, startTime)).format(TIMESTAMP_FORMAT_Z));
+            }
+            else {
+                data.append(LocalDateTime.of(startDate, startTime).format(TIMESTAMP_FORMAT));
+            }
         }
         else {
             data.append("DTSTART;VALUE=DATE:");
@@ -94,13 +108,17 @@ public final class ICalendar {
 
         data.append("\r\n");
 
-
         if (startTime != null) {
             if (endTime == null) {
                 endTime = startTime;
             }
             data.append("DTEND:");
-            data.append(LocalDateTime.of(endDate, endTime).format(TIMESTAMP_FORMAT));
+            if (timezone) {
+                data.append(convertToUtc(LocalDateTime.of(endDate, endTime)).format(TIMESTAMP_FORMAT_Z));
+            }
+            else {
+                data.append(LocalDateTime.of(endDate, endTime).format(TIMESTAMP_FORMAT));
+            }
         }
         else {
             data.append("DTEND;VALUE=DATE:");
@@ -109,7 +127,12 @@ public final class ICalendar {
 
         data.append("\r\n");
         data.append("DTSTAMP:");
-        data.append(LocalDateTime.now().format(TIMESTAMP_FORMAT));
+        if (timezone) {
+            data.append(convertToUtc(LocalDateTime.now()).format(TIMESTAMP_FORMAT_Z));
+        }
+        else {
+            data.append(LocalDateTime.now().format(TIMESTAMP_FORMAT));
+        }
         data.append("\r\n");
         data.append("END:VEVENT\r\n");
     }
