@@ -244,7 +244,7 @@ public final class Server<T> implements HttpHandler {
             }
         }
 
-        Request<T> r = Request.withBody(method, authorisation, exchange.getRequestPath(), body);
+        Request<T> r = Request.withBody(method, authorisation, exchange.getRequestPath(), parseQuery(exchange), body);
         return serverImplementation.handleRequest(r);
     }
 

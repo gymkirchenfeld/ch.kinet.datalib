@@ -38,8 +38,8 @@ public final class Request<T> {
         return new Request(Request.Method.Get, authorisation, path, query, null);
     }
 
-    public static <T> Request<T> withBody(Method method, T authorisation, String path, Data body) {
-        return new Request(method, authorisation, path, null, body);
+    public static <T> Request<T> withBody(Method method, T authorisation, String path, Query query, Data body) {
+        return new Request(method, authorisation, path, query, body);
     }
 
     protected Request(Method method, T authorisation, String path, Query query, Data body) {
