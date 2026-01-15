@@ -238,10 +238,19 @@ public final class JsonObject extends Dict implements Json {
         else {
             imp.put(key, value.getImp());
         }
-    }
+    } 
 
     public void putNull(String key) {
         imp.put(key, JSONObject.NULL);
+    }
+
+    public void putId(String key, Entity value) {
+        if (value == null) {
+            imp.put(key+"Id", 0);
+        }
+        else {
+            imp.put(key, value.getId());
+        }
     }
 
     public void putTerse(String key, Json value) {

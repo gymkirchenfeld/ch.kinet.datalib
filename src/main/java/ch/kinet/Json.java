@@ -21,4 +21,5 @@ public interface Json {
     JsonObject toJsonTerse();
 
     JsonObject toJsonVerbose();
+    
 }
