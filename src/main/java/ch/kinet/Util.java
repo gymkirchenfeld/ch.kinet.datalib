@@ -298,6 +298,10 @@ public final class Util {
         return contains(toLower(a), toLower(b));
     }
 
+    public static boolean ncontains(String a, String b) {
+        return icontains(Util.replaceAll(a, NAME_REPLACE_MAP), Util.replaceAll(b, NAME_REPLACE_MAP));
+    }
+
     public static boolean iequal(String a, String b) {
         return equal(toLower(a), toLower(b));
     }
