@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2016 Stefan Rothe
+ * Copyright (c) 2016 - 2026 Stefan Rothe
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,14 +56,16 @@ public final class HttpConnection {
     }
 
     public String readResponse() {
-        InputStream in = null;
         try {
-            int code = connection.getResponseCode();
-            if (code >= 400) {
-                throw new HttpException(code);
+            if (connection.getResponseCode() >= 400) {
+                return null;
             }
+        }
+        catch (IOException ex) {
+            throw new HttpException(ex);
+        }
 
-            in = connection.getInputStream();
+        try (InputStream in = connection.getInputStream()) {
             String encoding = connection.getContentEncoding();
             if (encoding == null) {
                 encoding = "UTF-8";
@@ -82,16 +84,6 @@ public final class HttpConnection {
         }
         catch (IOException ex) {
             throw new HttpException(ex);
-        }
-        finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            }
-            catch (final IOException ex) {
-                // ignore
-            }
         }
     }
 

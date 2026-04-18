@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 - 2024 by Stefan Rothe, Sebastian Forster, Tom Jampen
+ * Copyright (C) 2017 - 2026 by Stefan Rothe, Sebastian Forster, Tom Jampen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -159,7 +159,12 @@ public final class EventoApi {
         http.setHeader(AUTHORIZATION_HEADER, authorization());
         http.setHeader("Content-Type", "application/json");
         http.writeBody(searchDefinition);
-        return JsonObject.create(http.readResponse()).getArray("Result");
+        String result = http.readResponse();
+        if (http.getResponseCode() >= 400) {
+            throw new RuntimeException("Der Evento-Server antwortet mit Fehler: " + http.getResponseCode() + ": " + http.getResponseMessage());
+        }
+
+        return JsonObject.create(result).getArray("Result");
     }
 
     private String authorization() {
