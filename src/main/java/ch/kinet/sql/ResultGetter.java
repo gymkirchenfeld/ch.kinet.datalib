@@ -17,6 +17,7 @@
 package ch.kinet.sql;
 
 import ch.kinet.Binary;
+import ch.kinet.JsonObject;
 import ch.kinet.reflect.Property;
 import java.sql.Array;
 import java.sql.ResultSet;
@@ -101,6 +102,9 @@ abstract class ResultGetter {
         else if (propertyClass.equals(UUID.class)) {
             return new UUIDGetter(property, columnName);
         }
+        else if (propertyClass.equals(JsonObject.class)) {
+            return new JsonObjectGetter(property, columnName);
+        }        
         else {
             return null;
         }
@@ -362,6 +366,18 @@ abstract class ResultGetter {
         @Override
         protected Object doGetValue(ResultSet resultSet) throws Exception {
             return UUID.fromString(resultSet.getString(columnName));
+        }
+    }
+
+    private static class JsonObjectGetter extends ValueGetter {
+
+        public JsonObjectGetter(Property property, String columnName) {
+            super(property, columnName);
+        }
+
+        @Override
+        protected Object doGetValue(ResultSet resultSet) throws Exception {
+            return JsonObject.create(resultSet.getString(columnName));
         }
     }
 }

@@ -17,6 +17,7 @@
 package ch.kinet.sql;
 
 import ch.kinet.Binary;
+import ch.kinet.JsonObject;
 import ch.kinet.reflect.Property;
 import java.sql.PreparedStatement;
 import java.sql.Types;
@@ -78,6 +79,9 @@ abstract class ParameterSetter {
         else if (propertyClass.equals(UUID.class)) {
             return new UUIDSetter(property, index);
         }
+        else if (propertyClass.equals(JsonObject.class)) {
+            return new JsonObjectSetter(property, index);
+        }        
         else {
             return null;
         }
@@ -378,12 +382,29 @@ abstract class ParameterSetter {
 
         @Override
         protected void doSetNull(PreparedStatement statement) throws Exception {
-            statement.setNull(index, Types.OTHER);
+            statement.setNull(index, Types.VARCHAR);
         }
 
         @Override
         protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
             statement.setObject(index, (UUID) value);
+        }
+    }    
+
+    private static class JsonObjectSetter extends ValueSetter {
+
+        public JsonObjectSetter(Property property, int index) {
+            super(property, index);
+        }
+
+        @Override
+        protected void doSetNull(PreparedStatement statement) throws Exception {
+            statement.setNull(index, Types.OTHER);
+        }
+
+        @Override
+        protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
+            statement.setString(index, ((JsonObject) value).toString());
         }
     }
 }
