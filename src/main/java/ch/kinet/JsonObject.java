@@ -56,6 +56,14 @@ public final class JsonObject extends Dict implements Json {
         this.imp = imp;
     }
 
+    public void join(JsonObject other) {
+        for (String key : other.keySet()) {
+            if (!imp.has(key)) {
+                imp.put(key, other.imp.get(key));
+            }
+        }
+    }
+
     public JsonArray getArray(String key) {
         if (imp.isNull(key)) {
             return null;
