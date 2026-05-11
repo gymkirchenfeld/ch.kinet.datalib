@@ -404,7 +404,7 @@ abstract class ParameterSetter {
 
         @Override
         protected void doSetValue(PreparedStatement statement, Object value) throws Exception {
-            statement.setString(index, ((JsonObject) value).toString());
+            statement.setObject(index, value, Types.OTHER);
         }
     }
 }
