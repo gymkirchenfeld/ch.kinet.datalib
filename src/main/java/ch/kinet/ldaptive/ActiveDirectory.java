@@ -63,7 +63,7 @@ public class ActiveDirectory {
             operation.setThrowCondition(ResultPredicate.NOT_SUCCESS);
             AddResponse response = operation.execute(request);
             if (!response.isSuccess()) {
-                throw new RuntimeException(response.getDiagnosticMessage());
+                throw new RuntimeException("Error trying to add ad object " + object.toString() + ": " + response.getDiagnosticMessage());
             }
         }
         catch (LdapException ex) {
@@ -93,11 +93,11 @@ public class ActiveDirectory {
             operation.setThrowCondition(ResultPredicate.NOT_SUCCESS);
             ModifyResponse response = operation.execute(request);
             if (!response.isSuccess()) {
-                throw new RuntimeException(response.getDiagnosticMessage());
+                throw new RuntimeException("Error trying to modify ad object " + object.toString() + ": " + response.getDiagnosticMessage());
             }
         }
         catch (LdapException ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Error while modifying ad object " + object.toString() + ".", ex);
         }
     }
 
